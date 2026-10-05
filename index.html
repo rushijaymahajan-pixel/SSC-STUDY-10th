@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSC Study Hub • Advanced JavaScript — Rushabh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    fontFamily: { display: ['Fredoka','sans-serif'], body: ['Plus Jakarta Sans','sans-serif'] },
+    colors: { ink:'#141126', grape:'#7C3AED', hotpink:'#FF2E93', tang:'#FF6B35', sunny:'#FFC700', aqua:'#06B6D4', limepop:'#A3E635' }
+  }}
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<style>
+:root{
+  --bg:#FFF6E9; --card:#ffffff; --ink:#141126; --muted:#6B6690;
+  --pink:#FF2E93; --orange:#FF6B35; --yellow:#FFC700; --purple:#7C3AED; --cyan:#06B6D4; --lime:#A3E635; --blue:#2563EB;
+  --border:#141126; --shadow:7px 7px 0 #141126;
+  --glass:rgba(255,255,255,.82);
+}
+[data-theme="dark"]{
+  --bg:#0E0A2E; --card:#1B1650; --ink:#FFFDF2; --muted:#B9B3E8;
+  --border:#FFFDF2; --shadow:7px 7px 0 rgba(0,0,0,.9);
+  --glass:rgba(27,22,80,.85);
+}
+*{ -webkit-tap-highlight-color:transparent; }
+html{ scroll-behavior:smooth; }
+body{ font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:var(--ink); overflow-x:hidden; transition:background .4s,color .4s; }
+.font-display{ font-family:'Fredoka',sans-serif; }
+::-webkit-scrollbar{ width:11px; height:11px; }
+::-webkit-scrollbar-track{ background:var(--bg); }
+::-webkit-scrollbar-thumb{ background:linear-gradient(180deg,var(--pink),var(--orange),var(--purple)); border-radius:99px; border:2px solid var(--bg); }
+
+/* BLOBS */
+.bg-blobs{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.blob{ position:absolute; border-radius:50%; filter:blur(70px); opacity:.55; animation:floatBlob 12s ease-in-out infinite alternate; }
+[data-theme="dark"] .blob{ opacity:.32; }
+@keyframes floatBlob{ 0%{ transform:translate(0,0) scale(1);} 100%{ transform:translate(40px,-50px) scale(1.18);} }
+.grid-dots{ background-image:radial-gradient(rgba(20,17,38,.18) 1.6px, transparent 1.6px); background-size:18px 18px; }
+[data-theme="dark"] .grid-dots{ background-image:radial-gradient(rgba(255,255,255,.14) 1.6px, transparent 1.6px); }
+
+/* BRUTAL CARDS + BUTTONS */
+.brutal{ background:var(--card); border:3px solid var(--border); border-radius:22px; box-shadow:var(--shadow); transition:transform .18s ease, box-shadow .18s ease; }
+.brutal-hover:hover{ transform:translate(-2px,-3px) rotate(-.3deg); box-shadow:10px 10px 0 var(--border); }
+.btn-brutal{ border:3px solid var(--border); box-shadow:5px 5px 0 var(--border); border-radius:16px; font-weight:800; transition:.18s; display:inline-flex; align-items:center; gap:.55rem; justify-content:center; }
+.btn-brutal:hover{ transform:translate(-1px,-2px); box-shadow:7px 7px 0 var(--border); }
+.btn-brutal:active{ transform:translate(3px,3px); box-shadow:1px 1px 0 var(--border); }
+.grad-pink{ background:linear-gradient(135deg,#FF2E93,#FF6B35); color:#fff; }
+.grad-purple{ background:linear-gradient(135deg,#7C3AED,#06B6D4); color:#fff; }
+.grad-sun{ background:linear-gradient(135deg,#FFC700,#FF6B35); color:#141126; }
+.grad-lime{ background:linear-gradient(135deg,#A3E635,#06B6D4); color:#141126; }
+.grad-ink{ background:#141126; color:#fff; }
+[data-theme="dark"] .grad-ink{ background:#FFFDF2; color:#141126; border-color:#141126; }
+
+.highlight{ position:relative; display:inline-block; padding:0 .35em; z-index:1; }
+.highlight::before{ content:''; position:absolute; inset:12% -2% 6% -2%; background:var(--yellow); z-index:-1; transform:rotate(-1.5deg); border-radius:8px; border:2px solid var(--border); }
+.highlight-pink::before{ background:#FF9ACD; } .highlight-cyan::before{ background:#8BE9FD; } .highlight-lime::before{ background:#C9F158; }
+
+/* NAV */
+.nav-link{ display:flex; align-items:center; gap:.8rem; padding:.75rem .95rem; border-radius:16px; font-weight:800; font-size:.9rem; border:2px solid transparent; cursor:pointer; transition:.18s; color:var(--ink); width:100%; text-align:left; }
+.nav-link:hover{ background:var(--card); border-color:var(--border); transform:translateX(4px); }
+.nav-link.active{ background:#141126; color:#fff; border-color:#141126; box-shadow:4px 4px 0 var(--pink); }
+[data-theme="dark"] .nav-link.active{ background:#FFFDF2; color:#141126; box-shadow:4px 4px 0 var(--pink); }
+.nav-link.active .nav-ico{ background:#fff; color:#141126; }
+.nav-ico{ width:36px; height:36px; border-radius:12px; display:grid; place-items:center; flex-shrink:0; border:2px solid var(--border); }
+
+/* VIEWS */
+.app-view{ display:none; }
+.app-view.active{ display:block; animation:viewIn .45s cubic-bezier(.22,1,.36,1); }
+@keyframes viewIn{ from{ opacity:0; transform:translateY(18px) scale(.99);} to{ opacity:1; transform:none;} }
+
+/* REVEAL */
+.reveal{ opacity:0; transform:translateY(28px) scale(.98); transition:all .7s cubic-bezier(.22,1,.36,1); }
+.reveal.revealed{ opacity:1; transform:none; }
+.reveal-d1{ transition-delay:.08s;} .reveal-d2{ transition-delay:.16s;} .reveal-d3{ transition-delay:.24s;}
+
+/* MARQUEE */
+.marquee{ overflow:hidden; white-space:nowrap; border-top:3px solid var(--border); border-bottom:3px solid var(--border); }
+.marquee-track{ display:inline-flex; gap:0; animation:marq 22s linear infinite; }
+@keyframes marq{ to{ transform:translateX(-50%);} }
+
+/* LOADER */
+#loader{ position:fixed; inset:0; z-index:100; background:linear-gradient(135deg,#7C3AED,#FF2E93 45%,#FF6B35 75%,#FFC700); display:flex; align-items:center; justify-content:center; transition:opacity .6s, visibility .6s; }
+#loader.done{ opacity:0; visibility:hidden; }
+.loader-card{ background:#fff; border:4px solid #141126; border-radius:28px; box-shadow:12px 12px 0 #141126; padding:2.2rem 2.5rem; text-align:center; max-width:420px; width:92%; animation:pop .6s cubic-bezier(.34,1.56,.64,1); }
+@keyframes pop{ from{ transform:scale(.85) rotate(-2deg); opacity:0;} to{ transform:scale(1) rotate(0); opacity:1;} }
+.loader-bar{ height:14px; border:3px solid #141126; border-radius:99px; overflow:hidden; background:#FFF1C9; }
+.loader-fill{ height:100%; width:0%; background:linear-gradient(90deg,#7C3AED,#FF2E93,#FF6B35,#FFC700); transition:width .2s; border-radius:99px; }
+.spin-star{ animation:spin 2.2s linear infinite; display:inline-block; }
+@keyframes spin{ to{ transform:rotate(360deg);} }
+.bounce-dots span{ display:inline-block; width:10px; height:10px; border-radius:99px; margin:0 3px; animation:bdot 1s infinite; border:2px solid #141126; }
+.bounce-dots span:nth-child(2){ animation-delay:.15s;} .bounce-dots span:nth-child(3){ animation-delay:.3s;}
+@keyframes bdot{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-8px);} }
+
+/* TIMER RING */
+.timer-ring{ transform:rotate(-90deg); }
+.timer-ring circle{ transition:stroke-dashoffset .5s linear; }
+
+/* QUIZ */
+.quiz-opt{ border:3px solid var(--border); border-radius:16px; padding:.9rem 1rem; font-weight:700; cursor:pointer; background:var(--card); transition:.16s; display:flex; gap:.8rem; align-items:center; width:100%; text-align:left; }
+.quiz-opt:hover{ transform:translateX(5px); box-shadow:4px 4px 0 var(--border); }
+.quiz-opt.correct{ background:#C9F158 !important; color:#141126 !important; box-shadow:4px 4px 0 #141126; }
+.quiz-opt.wrong{ background:#FF6B6B !important; color:#fff !important; }
+.quiz-opt.selected{ background:#141126; color:#fff; }
+[data-theme="dark"] .quiz-opt.selected{ background:#FFFDF2; color:#141126; }
+
+/* INPUTS */
+.inp{ width:100%; border:3px solid var(--border); border-radius:14px; padding:.75rem .95rem; font-weight:700; background:var(--card); color:var(--ink); outline:none; transition:.15s; }
+.inp:focus{ box-shadow:4px 4px 0 var(--pink); transform:translate(-1px,-1px); }
+select.inp, input[type="number"].inp{ appearance:none; }
+.range{ -webkit-appearance:none; width:100%; height:12px; border-radius:99px; border:2px solid var(--border); background:linear-gradient(90deg,var(--pink),var(--orange)); outline:none; }
+.range::-webkit-slider-thumb{ -webkit-appearance:none; width:24px; height:24px; border-radius:50%; background:#fff; border:3px solid #141126; box-shadow:2px 2px 0 #141126; cursor:pointer; }
+
+/* STICKER */
+.sticker{ border:3px solid var(--border); box-shadow:4px 4px 0 var(--border); border-radius:99px; font-weight:800; font-size:.75rem; padding:.35rem .85rem; display:inline-flex; align-items:center; gap:.4rem; }
+.floaty{ animation:floaty 3.5s ease-in-out infinite; }
+.floaty2{ animation:floaty 4.5s ease-in-out infinite reverse; }
+@keyframes floaty{ 0%,100%{ transform:translateY(0) rotate(var(--r,0deg));} 50%{ transform:translateY(-10px) rotate(var(--r,0deg));} }
+.wiggle:hover{ animation:wig .4s ease; }
+@keyframes wig{ 0%,100%{ transform:rotate(0);} 25%{ transform:rotate(-4deg);} 75%{ transform:rotate(4deg);} }
+
+/* TOAST */
+#toastWrap{ position:fixed; top:18px; right:18px; z-index:90; display:flex; flex-direction:column; gap:.7rem; max-width:min(360px,90vw); }
+.toast{ border:3px solid var(--border); border-radius:18px; box-shadow:5px 5px 0 var(--border); padding:.9rem 1rem; font-weight:700; font-size:.88rem; display:flex; gap:.7rem; align-items:flex-start; animation:toastIn .4s cubic-bezier(.34,1.56,.64,1); background:var(--card); color:var(--ink); }
+@keyframes toastIn{ from{ transform:translateX(110%) rotate(3deg); opacity:0;} to{ transform:none; opacity:1;} }
+.toast.out{ transition:.35s; transform:translateX(120%); opacity:0; }
+
+/* MODAL */
+.modal-bg{ position:fixed; inset:0; background:rgba(20,17,38,.65); backdrop-filter:blur(6px); z-index:80; display:none; align-items:center; justify-content:center; padding:1rem; }
+.modal-bg.open{ display:flex; animation:fadeIn .25s; }
+@keyframes fadeIn{ from{ opacity:0;} to{ opacity:1;} }
+.modal-card{ animation:pop .35s cubic-bezier(.34,1.56,.64,1); max-height:92vh; overflow:auto; }
+
+/* CODE */
+.codebox{ background:#141126; color:#D9F99D; border:3px solid #141126; border-radius:16px; font-family:ui-monospace,Menlo,monospace; font-size:.76rem; line-height:1.6; overflow:auto; }
+[data-theme="dark"] .codebox{ border-color:#FFFDF2; }
+.chip{ border:2px solid var(--border); border-radius:99px; padding:.35rem .9rem; font-weight:800; font-size:.78rem; cursor:pointer; background:var(--card); transition:.15s; }
+.chip.active, .chip:hover{ background:#141126; color:#fff; }
+[data-theme="dark"] .chip.active{ background:#FFFDF2; color:#141126; }
+.note-card{ break-inside:avoid; }
+.masonry{ columns:1; column-gap:1rem; } @media(min-width:768px){ .masonry{ columns:2; } } @media(min-width:1280px){ .masonry{ columns:3; } }
+.prog-track{ height:12px; border:2px solid var(--border); border-radius:99px; background:rgba(0,0,0,.08); overflow:hidden; }
+[data-theme="dark"] .prog-track{ background:rgba(255,255,255,.12); }
+.prog-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg,var(--pink),var(--orange),var(--yellow)); transition:width .8s cubic-bezier(.22,1,.36,1); }
+.timeline-dot{ width:18px; height:18px; border-radius:99px; border:3px solid var(--border); flex-shrink:0; }
+.confetti-canvas{ position:fixed; inset:0; pointer-events:none; z-index:99; }
+.subj-pattern{ background-image:radial-gradient(rgba(255,255,255,.35) 2px, transparent 2px); background-size:16px 16px; }
+.tick{ animation:tickPop .35s cubic-bezier(.34,1.56,.64,1); } @keyframes tickPop{ from{ transform:scale(.5);} to{ transform:scale(1);} }
+.shake{ animation:shake .4s; } @keyframes shake{ 0%,100%{ transform:translateX(0);} 25%{ transform:translateX(-6px);} 75%{ transform:translateX(6px);} }
+#sidebar{ transition:transform .35s cubic-bezier(.22,1,.36,1); }
+@media(max-width:1023px){ #sidebar{ position:fixed; left:0; top:0; bottom:0; z-index:70; transform:translateX(-105%); } #sidebar.open{ transform:none; } }
+.goal-done{ text-decoration:line-through; opacity:.6; }
+</style>
+</head>
+<body class="font-body">
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-card">
+    <div class="flex items-center justify-center gap-2 mb-2">
+      <span class="spin-star text-3xl">✦</span>
+      <span class="font-display font-bold text-2xl tracking-tight text-[#141126]">SSC STUDY HUB</span>
+      <span class="spin-star text-3xl">✦</span>
+    </div>
+    <p class="text-xs font-extrabold tracking-[.25em] text-[#7C3AED] mb-3">ADVANCED JAVASCRIPT • v2.4.0</p>
+    <div class="loader-bar mb-3"><div id="loaderFill" class="loader-fill"></div></div>
+    <p id="loaderMsg" class="text-sm font-bold text-[#141126]">Loading Rushabh's dashboard…</p>
+    <div class="bounce-dots mt-3"><span style="background:#FF2E93"></span><span style="background:#FFC700"></span><span style="background:#06B6D4"></span></div>
+  </div>
+</div>
+
+<div class="bg-blobs">
+  <div class="blob" style="width:520px;height:520px;background:#FF2E93;top:-140px;left:-140px;"></div>
+  <div class="blob" style="width:460px;height:460px;background:#FFC700;top:20%;right:-160px;animation-delay:1s;"></div>
+  <div class="blob" style="width:520px;height:520px;background:#7C3AED;bottom:-180px;left:20%;animation-delay:2s;"></div>
+  <div class="blob" style="width:380px;height:380px;background:#06B6D4;bottom:10%;right:10%;animation-delay:.5s;"></div>
+</div>
+
+<div id="toastWrap"></div>
+
+<div class="relative z-10 flex min-h-screen">
+
+  <!-- SIDEBAR -->
+  <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-[65] hidden lg:hidden"></div>
+  <aside id="sidebar" class="w-[290px] shrink-0 p-4 lg:p-5 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+    <div class="brutal p-5 mb-4 relative overflow-hidden">
+      <div class="absolute -top-8 -right-8 w-28 h-28 rounded-full subj-pattern" style="background-color:#FF2E93"></div>
+      <div class="flex items-center gap-3 relative">
+        <div class="w-12 h-12 rounded-2xl grid place-items-center font-display font-bold text-2xl text-white border-[3px] border-[#141126]" style="background:linear-gradient(135deg,#7C3AED,#FF2E93)">S</div>
+        <div>
+          <p class="font-display font-bold leading-none text-lg">SSC Study Hub</p>
+          <p class="text-[11px] font-extrabold tracking-widest text-[#FF2E93]">ADVANCED JAVASCRIPT</p>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center gap-3 p-3 rounded-2xl border-[3px] border-[#141126] bg-[#FFF1C9]">
+        <img src="https://api.dicebear.com/9.x/adventurer/svg?seed=Rushabh&backgroundColor=ffd5dc" alt="Rushabh" class="w-12 h-12 rounded-xl border-[3px] border-[#141126] bg-white">
+        <div class="min-w-0">
+          <p class="font-display font-bold leading-none">Rushabh ⚡</p>
+          <p class="text-xs font-bold opacity-70">Class 10 • SSC 2026</p>
+        </div>
+        <span class="ml-auto sticker grad-sun !text-[11px]">Lv <span id="sideLevel">1</span></span>
+      </div>
+      <div class="mt-3">
+        <div class="flex justify-between text-xs font-extrabold mb-1"><span id="sideXPText">0 XP</span><span id="sideXPNext">300 to next</span></div>
+        <div class="prog-track"><div id="sideXPBar" class="prog-fill" style="width:5%"></div></div>
+      </div>
+    </div>
+
+    <nav class="brutal p-3 mb-4" id="mainNav">
+      <p class="text-[11px] font-extrabold tracking-[.2em] opacity-60 px-2 mb-2">NAVIGATE</p>
+      <button class="nav-link active" data-target="dashboard"><span class="nav-ico" style="background:#FFC700">◈</span> Dashboard</button>
+      <button class="nav-link" data-target="subjects"><span class="nav-ico" style="background:#FF9ACD">▣</span> Subjects <span class="ml-auto text-xs font-black bg-[#141126] text-white rounded-full px-2 py-.5">8</span></button>
+      <button class="nav-link" data-target="timer"><span class="nav-ico" style="background:#8BE9FD">◐</span> Focus Timer</button>
+      <button class="nav-link" data-target="quiz"><span class="nav-ico" style="background:#C9F158">✎</span> Quiz Zone</button>
+      <button class="nav-link" data-target="calculator"><span class="nav-ico" style="background:#FFB020">%</span> Marks Calculator</button>
+      <button class="nav-link" data-target="goals"><span class="nav-ico" style="background:#D8B4FE">◎</span> Goals</button>
+      <button class="nav-link" data-target="notes"><span class="nav-ico" style="background:#FDE68A">✦</span> Notes</button>
+      <button class="nav-link" data-target="achievements"><span class="nav-ico" style="background:#FDA4AF">★</span> Achievements</button>
+      <button class="nav-link" data-target="contact"><span class="nav-ico" style="background:#fff">☺</span> Portfolio + Contact</button>
+    </nav>
+
+    <div class="brutal p-4 mb-4">
+      <div class="flex items-center justify-between mb-2">
+        <p class="font-display font-bold">Theme</p>
+        <button id="themeToggle" class="btn-brutal grad-purple !rounded-full !p-2 w-11 h-11 text-lg" title="Toggle theme">◑</button>
+      </div>
+      <p id="themeLabel" class="text-xs font-bold opacity-70 mb-3">Vibrant Light — high energy mode</p>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="exportBtn" class="btn-brutal text-xs py-2 px-2 bg-white">⤓ Export</button>
+        <button id="resetBtn" class="btn-brutal text-xs py-2 px-2 grad-pink">Clear Data</button>
+      </div>
+      <p class="text-[11px] font-bold opacity-60 mt-3 text-center">v2.4.0 • build 2026.10.05<br>Open DevTools → Console for logs</p>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="flex-1 min-w-0 px-3 sm:px-6 lg:px-8 pb-28 lg:pb-10 max-w-[1250px] mx-auto w-full">
+
+    <!-- TOPBAR -->
+    <header class="sticky top-3 z-40 mt-3">
+      <div class="brutal !rounded-2xl px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3" style="background:var(--glass);backdrop-filter:blur(12px)">
+        <button id="menuBtn" class="lg:hidden btn-brutal !rounded-xl w-11 h-11 grad-ink">☰</button>
+        <div class="relative flex-1 min-w-0">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 font-black opacity-60">⌕</span>
+          <input id="globalSearch" type="text" placeholder="Search subjects, notes, goals… (try 'maths')" class="inp !pl-10 !py-2.5 !rounded-xl text-sm">
+        </div>
+        <div class="hidden md:flex items-center gap-2">
+          <span class="sticker bg-white">🔥 <span id="streakPill">1</span> day streak</span>
+          <span class="sticker grad-sun"><span id="clock">--:--</span></span>
+        </div>
+        <button id="bellBtn" class="btn-brutal !rounded-xl w-11 h-11 bg-white relative">♪<span id="bellDot" class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#FF2E93] border-2 border-[#141126]"></span></button>
+        <img src="https://api.dicebear.com/9.x/adventurer/svg?seed=Rushabh&backgroundColor=ffd5dc" class="w-11 h-11 rounded-xl border-[3px] border-[#141126] bg-white hidden sm:block" alt="avatar">
+      </div>
+    </header>
+
+    <div id="views" class="mt-5">
+
+      <!-- ============ DASHBOARD ============ -->
+      <section id="view-dashboard" class="app-view active">
+        <!-- HERO -->
+        <div class="brutal overflow-hidden mb-5 reveal revealed">
+          <div class="grid lg:grid-cols-[1.15fr_.85fr]">
+            <div class="p-6 sm:p-9 relative grid-dots">
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="sticker grad-pink text-white">✦ SSC BATCH 2026</span>
+                <span class="sticker bg-white" id="greetSticker">Good morning, Champ!</span>
+                <span class="sticker grad-lime">ADVANCED JS PROJECT</span>
+              </div>
+              <h1 class="font-display font-bold text-4xl sm:text-5xl xl:text-6xl leading-[1.02] tracking-tight">Hey, I'm <span class="highlight">Rushabh!</span><br>Let's crack <span class="highlight highlight-pink">SSC</span> together.</h1>
+              <p class="mt-4 font-semibold opacity-80 max-w-xl">Your all-in-one student portfolio + study dashboard. Track 8 subjects, pump focus sessions, smash quizzes, calculate marks & unlock achievements — all saved locally with vanilla Advanced JS.</p>
+              <div class="flex flex-wrap gap-3 mt-6">
+                <button class="btn-brutal grad-pink px-6 py-3 nav-jump" data-target="timer">▶ Start Focus Session</button>
+                <button class="btn-brutal bg-white px-6 py-3 nav-jump" data-target="quiz">✎ Take a Quiz</button>
+                <button class="btn-brutal grad-sun px-5 py-3 nav-jump" data-target="subjects">Explore Subjects</button>
+              </div>
+              <div class="flex flex-wrap gap-5 mt-7">
+                <div><p class="font-display font-bold text-2xl" id="heroSubjects">8</p><p class="text-xs font-extrabold tracking-widest opacity-60">SUBJECTS</p></div>
+                <div><p class="font-display font-bold text-2xl"><span id="heroXP">0</span> XP</p><p class="text-xs font-extrabold tracking-widest opacity-60">EARNED</p></div>
+                <div><p class="font-display font-bold text-2xl"><span id="heroHours">0</span>h</p><p class="text-xs font-extrabold tracking-widest opacity-60">FOCUSED</p></div>
+                <div><p class="font-display font-bold text-2xl"><span id="heroQuiz">0</span>%</p><p class="text-xs font-extrabold tracking-widest opacity-60">QUIZ AVG</p></div>
+              </div>
+            </div>
+            <div class="p-6 sm:p-8 flex items-center justify-center relative" style="background:linear-gradient(135deg,#7C3AED,#FF2E93 55%,#FF6B35)">
+              <div class="absolute inset-0 subj-pattern opacity-60"></div>
+              <div class="brutal bg-white !border-[#141126] p-5 w-full max-w-[340px] relative rotate-[-1.5deg]">
+                <div class="flex items-center gap-3">
+                  <img src="https://api.dicebear.com/9.x/adventurer/svg?seed=Rushabh&backgroundColor=ffd5dc" class="w-20 h-20 rounded-2xl border-[3px] border-[#141126] bg-[#FFF1C9]" alt="Rushabh">
+                  <div><p class="font-display font-bold text-xl leading-none">Rushabh</p><p class="text-xs font-extrabold text-[#7C3AED]">PORTFOLIO • CLASS 10</p>
+                    <div class="flex gap-1 mt-1 text-sm">★★★★★</div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-4 text-center">
+                  <div class="rounded-xl border-2 border-[#141126] p-2 bg-[#C9F158]"><p class="font-display font-bold" id="cardLevel">Lv 1</p><p class="text-[11px] font-extrabold">LEVEL</p></div>
+                  <div class="rounded-xl border-2 border-[#141126] p-2 bg-[#8BE9FD]"><p class="font-display font-bold" id="cardStreak">1 🔥</p><p class="text-[11px] font-extrabold">STREAK</p></div>
+                </div>
+                <div class="mt-3 rounded-xl border-2 border-[#141126] p-3 bg-[#FFF1C9]">
+                  <p class="text-xs font-black tracking-widest mb-1">TODAY'S MANTRA</p>
+                  <p id="quoteText" class="font-display font-medium text-[15px] leading-snug">"Small daily wins compound into board-exam greatness."</p>
+                  <button id="quoteBtn" class="text-xs font-extrabold underline mt-1">↻ new quote</button>
+                </div>
+                <span class="sticker grad-pink text-white absolute -top-3 -left-3 floaty" style="--r:-6deg">★ AIR 1 GOAL</span>
+                <span class="sticker grad-sun absolute -bottom-3 -right-3 floaty2" style="--r:5deg">95%+ TARGET</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="marquee py-2 mb-5 font-display font-bold text-lg brutal !rounded-2xl !shadow-none" style="background:#141126;color:#fff;border-color:#141126">
+          <div class="marquee-track" id="marqueeTrack"></div>
+        </div>
+
+        <!-- STATS -->
+        <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
+          <div class="brutal brutal-hover p-5 reveal"><div class="flex justify-between items-start"><div><p class="text-xs font-black tracking-widest opacity-60">TOTAL XP</p><p class="font-display font-bold text-3xl"><span id="statXP">0</span></p><p class="text-xs font-bold text-[#FF2E93]" id="statLevel">Level 1 Scholar</p></div><div class="w-12 h-12 rounded-2xl grid place-items-center text-2xl border-[3px] border-[#141126] grad-pink">⚡</div></div><div class="prog-track mt-3"><div id="statXPBar" class="prog-fill" style="width:10%"></div></div></div>
+          <div class="brutal brutal-hover p-5 reveal reveal-d1"><div class="flex justify-between items-start"><div><p class="text-xs font-black tracking-widest opacity-60">FOCUS TIME</p><p class="font-display font-bold text-3xl"><span id="statHours">0</span><span class="text-lg">h</span> <span id="statMins" class="text-lg opacity-60">0m</span></p><p class="text-xs font-bold text-[#06B6D4]"><span id="statSessions">0</span> sessions done</p></div><div class="w-12 h-12 rounded-2xl grid place-items-center text-2xl border-[3px] border-[#141126] grad-lime">◐</div></div><div class="prog-track mt-3"><div id="statFocusBar" class="prog-fill" style="width:20%;background:linear-gradient(90deg,#06B6D4,#A3E635)"></div></div></div>
+          <div class="brutal brutal-hover p-5 reveal reveal-d2"><div class="flex justify-between items-start"><div><p class="text-xs font-black tracking-widest opacity-60">QUIZ AVERAGE</p><p class="font-display font-bold text-3xl"><span id="statQuizAvg">0</span>%</p><p class="text-xs font-bold text-[#7C3AED]"><span id="statQuizCount">0</span> quizzes attempted</p></div><div class="w-12 h-12 rounded-2xl grid place-items-center text-2xl border-[3px] border-[#141126] grad-purple">✎</div></div><div class="prog-track mt-3"><div id="statQuizBar" class="prog-fill" style="width:0%;background:linear-gradient(90deg,#7C3AED,#FF2E93)"></div></div></div>
+          <div class="brutal brutal-hover p-5 reveal reveal-d3"><div class="flex justify-between items-start"><div><p class="text-xs font-black tracking-widest opacity-60">GOALS DONE</p><p class="font-display font-bold text-3xl"><span id="statGoals">0/0</span></p><p class="text-xs font-bold text-[#FF6B35]" id="statSyllabus">0% syllabus complete</p></div><div class="w-12 h-12 rounded-2xl grid place-items-center text-2xl border-[3px] border-[#141126] grad-sun">◎</div></div><div class="prog-track mt-3"><div id="statGoalBar" class="prog-fill" style="width:0%"></div></div></div>
+        </div>
+
+        <div class="grid xl:grid-cols-3 gap-4 mb-5">
+          <div class="brutal p-5 xl:col-span-2 reveal">
+            <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <h3 class="font-display font-bold text-xl">Syllabus Progress <span class="sticker grad-purple text-white ml-1">LIVE</span></h3>
+              <button class="btn-brutal text-xs px-3 py-1.5 bg-white nav-jump" data-target="subjects">Manage →</button>
+            </div>
+            <div class="grid md:grid-cols-2 gap-5 items-center">
+              <div id="dashProgressBars" class="space-y-3"></div>
+              <div class="relative h-[230px]"><canvas id="progressChart"></canvas></div>
+            </div>
+          </div>
+          <div class="brutal p-5 reveal reveal-d1" style="background:linear-gradient(180deg,var(--card),#FFF1C9)">
+            <h3 class="font-display font-bold text-xl mb-1">Quick Focus</h3>
+            <p class="text-sm font-semibold opacity-70 mb-3">One tap → timer view. Earn 20 XP per session.</p>
+            <div class="text-center py-2"><p id="miniTimerText" class="font-display font-bold text-5xl">25:00</p><p class="text-xs font-black tracking-widest opacity-60">READY TO FOCUS</p></div>
+            <div class="grid grid-cols-3 gap-2 my-3">
+              <button class="chip mini-preset active" data-min="25">25m</button>
+              <button class="chip mini-preset" data-min="15">15m</button>
+              <button class="chip mini-preset" data-min="50">50m</button>
+            </div>
+            <button class="btn-brutal grad-pink w-full py-3 nav-jump" data-target="timer">Open Full Timer ⏱</button>
+          </div>
+        </div>
+
+        <div class="grid xl:grid-cols-3 gap-4">
+          <div class="brutal p-5 reveal"><h3 class="font-display font-bold text-xl mb-3">Top Subjects Right Now</h3><div id="dashSubjects" class="space-y-3"></div></div>
+          <div class="brutal p-5 reveal reveal-d1"><h3 class="font-display font-bold text-xl mb-3">Today's Goals</h3><div id="dashGoals" class="space-y-2.5"></div><button class="btn-brutal w-full mt-3 py-2.5 text-sm bg-white nav-jump" data-target="goals">+ Manage Goals</button></div>
+          <div class="brutal p-5 reveal reveal-d2" style="background:linear-gradient(135deg,#7C3AED,#FF2E93);color:#fff;border-color:#141126">
+            <h3 class="font-display font-bold text-xl mb-1">Latest Win 🏆</h3><p class="text-sm font-semibold opacity-90 mb-3">Keep the streak alive to unlock more.</p>
+            <div id="dashAch" class="bg-white text-[#141126] rounded-2xl border-[3px] border-[#141126] p-3 font-bold text-sm">Complete your first focus session to unlock “First Focus”!</div>
+            <button class="btn-brutal grad-sun w-full mt-3 py-2.5 text-sm nav-jump" data-target="achievements">View All Wins →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SUBJECTS ============ -->
+      <section id="view-subjects" class="app-view">
+        <div class="brutal p-6 sm:p-8 mb-5 relative overflow-hidden" style="background:linear-gradient(120deg,#FFC700,#FF6B35 50%,#FF2E93);border-color:#141126">
+          <div class="absolute inset-0 subj-pattern"></div>
+          <div class="relative">
+            <span class="sticker bg-white">8 SUBJECTS • SSC BOARD</span>
+            <h2 class="font-display font-bold text-3xl sm:text-5xl text-white mt-3" style="text-shadow:3px 3px 0 #141126">Pick a subject.<br>Own the chapter.</h2>
+            <div class="flex flex-col sm:flex-row gap-3 mt-5 max-w-2xl">
+              <input id="subjectSearch" class="inp !bg-white flex-1" placeholder="🔍 Search subjects… e.g. Science, Hindi, Maths">
+              <select id="subjectFilter" class="inp !bg-white sm:w-52"><option value="all">All groups</option><option value="maths">Maths</option><option value="science">Science</option><option value="lang">Languages</option><option value="sst">Social Science</option></select>
+            </div>
+            <p class="text-white font-bold text-sm mt-3">Showing <span id="subjCount">8</span> subjects • drag the slider to update syllabus %</p>
+          </div>
+        </div>
+        <div id="subjectGrid" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+      </section>
+
+      <!-- ============ TIMER ============ -->
+      <section id="view-timer" class="app-view">
+        <div class="grid xl:grid-cols-[1.1fr_.9fr] gap-4">
+          <div class="brutal p-6 sm:p-8 text-center relative overflow-hidden reveal revealed">
+            <div class="absolute top-4 left-4 sticker grad-lime">FOCUS MODE</div>
+            <div class="absolute top-4 right-4 sticker bg-white" id="timerModeLabel">POMODORO 25/5</div>
+            <h2 class="font-display font-bold text-3xl mt-8">Study Timer</h2>
+            <p class="font-semibold opacity-70 text-sm mb-4">Stay in the zone. Every finished session = <b>+20 XP</b>.</p>
+            <div class="flex justify-center gap-2 flex-wrap mb-4">
+              <button class="chip timer-preset active" data-min="25" data-label="Focus 25">🍅 25m</button>
+              <button class="chip timer-preset" data-min="5" data-label="Break 5">☕ 5m</button>
+              <button class="chip timer-preset" data-min="15" data-label="Break 15">🌿 15m</button>
+              <button class="chip timer-preset" data-min="50" data-label="Deep 50">🚀 50m</button>
+            </div>
+            <div class="relative inline-block my-2">
+              <svg class="timer-ring" width="270" height="270" viewBox="0 0 270 270">
+                <circle cx="135" cy="135" r="118" fill="none" stroke-width="20" stroke="var(--border)" opacity=".12"/>
+                <circle id="timerTrack2" cx="135" cy="135" r="118" fill="none" stroke-width="20" stroke="#FFE9A8" />
+                <circle id="timerRing" cx="135" cy="135" r="118" fill="none" stroke-width="20" stroke-linecap="round" stroke="url(#timerGrad)" stroke-dasharray="741.4" stroke-dashoffset="0"/>
+                <defs><linearGradient id="timerGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FF2E93"/><stop offset="50%" stop-color="#FF6B35"/><stop offset="100%" stop-color="#FFC700"/></linearGradient></defs>
+              </svg>
+              <div class="absolute inset-0 grid place-items-center">
+                <div><p id="timerText" class="font-display font-bold text-6xl leading-none">25:00</p><p id="timerStatus" class="text-xs font-black tracking-[.25em] opacity-60 mt-1">READY</p></div>
+              </div>
+              <span class="sticker grad-pink text-white absolute -left-4 top-1/2 floaty" style="--r:-8deg">+20 XP</span>
+            </div>
+            <div class="flex justify-center gap-3 mt-4 flex-wrap">
+              <button id="timerStart" class="btn-brutal grad-pink px-8 py-3 text-lg">▶ Start</button>
+              <button id="timerPause" class="btn-brutal bg-white px-6 py-3">⏸ Pause</button>
+              <button id="timerReset" class="btn-brutal grad-sun px-6 py-3">↺ Reset</button>
+            </div>
+            <div class="flex items-center justify-center gap-2 mt-4 text-sm font-bold">
+              <label>Custom:</label><input id="customMins" type="number" min="1" max="180" value="25" class="inp !w-24 !py-1.5 text-center"><span>mins</span>
+              <button id="customSet" class="btn-brutal text-xs px-3 py-2 bg-white">Set</button>
+              <label class="ml-2 flex items-center gap-1"><input type="checkbox" id="soundOn" checked class="w-4 h-4 accent-pink-500"> Sound</label>
+            </div>
+          </div>
+          <div class="space-y-4">
+            <div class="grid grid-cols-3 gap-3">
+              <div class="brutal p-4 text-center"><p class="font-display font-bold text-2xl" id="sessToday">0</p><p class="text-[11px] font-black tracking-widest opacity-60">TODAY</p></div>
+              <div class="brutal p-4 text-center"><p class="font-display font-bold text-2xl" id="sessTotal">0</p><p class="text-[11px] font-black tracking-widest opacity-60">SESSIONS</p></div>
+              <div class="brutal p-4 text-center"><p class="font-display font-bold text-2xl" id="sessMins">0m</p><p class="text-[11px] font-black tracking-widest opacity-60">FOCUSED</p></div>
+            </div>
+            <div class="brutal p-5">
+              <h3 class="font-display font-bold text-lg mb-2">Session History</h3>
+              <div id="sessionList" class="space-y-2 max-h-[260px] overflow-auto pr-1"></div>
+            </div>
+            <div class="brutal p-5" style="background:linear-gradient(135deg,#06B6D4,#A3E635)">
+              <h3 class="font-display font-bold text-lg text-[#141126]">Focus Tips ⚡</h3>
+              <ul class="text-sm font-bold text-[#141126] mt-2 space-y-1.5 list-disc ml-5">
+                <li>Phone on DND, desk only with water + timetable.</li>
+                <li>25-min sprint → 5-min walk. Repeat ×4, then long break.</li>
+                <li>End each session by writing 1 line in Notes.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ QUIZ ============ -->
+      <section id="view-quiz" class="app-view">
+        <div id="quizSetup" class="grid xl:grid-cols-[1fr_.9fr] gap-4">
+          <div class="brutal p-6 sm:p-8">
+            <span class="sticker grad-purple text-white">QUIZ ZONE • +10 XP PER CORRECT</span>
+            <h2 class="font-display font-bold text-3xl sm:text-4xl mt-3">Set up your <span class="highlight highlight-cyan">battle</span></h2>
+            <p class="font-semibold opacity-70 text-sm mt-1 mb-4">Real SSC-style questions for all 8 subjects. Score 80%+ to unlock Quiz Whiz.</p>
+            <p class="font-black text-xs tracking-widest mb-2">1 • CHOOSE SUBJECT</p>
+            <div id="quizSubjects" class="flex flex-wrap gap-2 mb-4"></div>
+            <div class="grid sm:grid-cols-2 gap-3 mb-4">
+              <div><p class="font-black text-xs tracking-widest mb-2">2 • QUESTIONS</p><div class="flex gap-2" id="quizCountWrap"><button class="chip qcount active" data-n="5">5 Qs</button><button class="chip qcount" data-n="8">8 Qs</button><button class="chip qcount" data-n="10">10 Qs</button></div></div>
+              <div><p class="font-black text-xs tracking-widest mb-2">3 • DIFFICULTY</p><div class="flex gap-2" id="quizDiffWrap"><button class="chip qdiff active" data-d="Mixed">Mixed</button><button class="chip qdiff" data-d="Easy">Easy</button><button class="chip qdiff" data-d="Hard">Hard</button></div></div>
+            </div>
+            <button id="quizStartBtn" class="btn-brutal grad-pink w-full py-4 text-lg">⚡ Start Quiz Battle</button>
+            <p class="text-xs font-bold opacity-60 mt-2 text-center">Timer: 30s per question • No negative marking • Best scores saved</p>
+          </div>
+          <div class="space-y-4">
+            <div class="brutal p-5"><h3 class="font-display font-bold text-lg mb-3">🏅 Best Scores</h3><div id="bestScores" class="space-y-2"></div></div>
+            <div class="brutal p-5"><h3 class="font-display font-bold text-lg mb-3">Recent Attempts</h3><div id="quizHistory" class="space-y-2 max-h-[220px] overflow-auto"></div></div>
+          </div>
+        </div>
+        <div id="quizPlay" class="hidden">
+          <div class="brutal p-5 mb-4">
+            <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+              <span class="sticker grad-pink text-white" id="quizPlaySub">Maths 1</span>
+              <span class="font-black text-sm">Q <span id="quizQNum">1</span>/<span id="quizQTotal">5</span> • ⏱ <span id="quizQTime">30</span>s</span>
+              <span class="sticker grad-sun">Score: <span id="quizLiveScore">0</span></span>
+            </div>
+            <div class="prog-track"><div id="quizProg" class="prog-fill" style="width:0%"></div></div>
+          </div>
+          <div class="brutal p-6 sm:p-8">
+            <h3 id="quizQ" class="font-display font-bold text-xl sm:text-2xl mb-5">Question?</h3>
+            <div id="quizOpts" class="grid gap-3"></div>
+            <div class="flex justify-between mt-6"><button id="quizQuit" class="btn-brutal bg-white px-5 py-2.5 text-sm">✕ Quit</button><button id="quizNext" class="btn-brutal grad-ink px-6 py-2.5 text-sm" disabled>Next →</button></div>
+          </div>
+        </div>
+        <div id="quizResult" class="hidden">
+          <div class="brutal p-8 text-center max-w-2xl mx-auto">
+            <div class="text-6xl mb-2" id="quizEmoji">🎉</div>
+            <h2 class="font-display font-bold text-4xl" id="quizScoreBig">8/10</h2>
+            <p class="font-bold opacity-70" id="quizRemark">Outstanding! Board-topper energy.</p>
+            <div class="prog-track my-4"><div id="quizScoreBar" class="prog-fill" style="width:80%"></div></div>
+            <div id="quizReview" class="text-left space-y-2 max-h-[300px] overflow-auto mt-4"></div>
+            <div class="flex gap-3 justify-center mt-6 flex-wrap"><button id="quizRetry" class="btn-brutal grad-pink px-6 py-3">↺ Retry</button><button id="quizHome" class="btn-brutal bg-white px-6 py-3">Setup</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CALCULATOR ============ -->
+      <section id="view-calculator" class="app-view">
+        <div class="brutal p-6 sm:p-8 mb-4" style="background:linear-gradient(120deg,#7C3AED,#06B6D4);color:#fff">
+          <span class="sticker bg-white !text-[#141126]">SSC MARKS CALCULATOR • OUT OF 800</span>
+          <h2 class="font-display font-bold text-3xl sm:text-4xl mt-2">What will your <u>board %</u> be?</h2>
+          <p class="font-semibold opacity-90 text-sm">Enter predicted / actual marks (0–100). Instant % + grade + what-if analysis.</p>
+        </div>
+        <div class="grid xl:grid-cols-[1.1fr_.9fr] gap-4">
+          <div class="brutal p-5 sm:p-6"><div id="marksInputs" class="grid sm:grid-cols-2 gap-3"></div>
+            <div class="flex gap-3 mt-4 flex-wrap"><button id="calcBtn" class="btn-brutal grad-pink px-7 py-3 flex-1">Calculate % ⚡</button><button id="calcClear" class="btn-brutal bg-white px-5 py-3">Reset</button><button id="calcSample" class="btn-brutal grad-sun px-5 py-3">Fill 95% demo</button></div>
+          </div>
+          <div class="space-y-4">
+            <div class="brutal p-6 text-center">
+              <p class="text-xs font-black tracking-[.25em] opacity-60">YOUR PERCENTAGE</p>
+              <p class="font-display font-bold text-6xl my-1"><span id="calcPct">0</span><span class="text-2xl">%</span></p>
+              <span id="calcGrade" class="sticker grad-purple text-white text-sm">Grade: —</span>
+              <p id="calcRemark" class="font-bold text-sm mt-3 opacity-70">Enter marks and hit Calculate.</p>
+              <div class="prog-track mt-3"><div id="calcBar" class="prog-fill" style="width:0%"></div></div>
+              <div class="grid grid-cols-3 gap-2 mt-4 text-center">
+                <div class="rounded-xl border-2 border-[#141126] p-2 bg-[#FFF1C9]"><p class="font-display font-bold" id="calcTotal">0/800</p><p class="text-[11px] font-black">TOTAL</p></div>
+                <div class="rounded-xl border-2 border-[#141126] p-2 bg-[#C9F158]"><p class="font-display font-bold" id="calcGPA">0.0</p><p class="text-[11px] font-black">CGPA ~</p></div>
+                <div class="rounded-xl border-2 border-[#141126] p-2 bg-[#8BE9FD]"><p class="font-display font-bold" id="calcNeed">—</p><p class="text-[11px] font-black">FOR 90%</p></div>
+              </div>
+            </div>
+            <div class="brutal p-5"><h3 class="font-display font-bold mb-3">Subject Breakdown</h3><div id="calcBreak" class="space-y-2.5"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ GOALS ============ -->
+      <section id="view-goals" class="app-view">
+        <div class="grid xl:grid-cols-[.95fr_1.05fr] gap-4">
+          <div class="brutal p-6">
+            <span class="sticker grad-sun">GOAL CRUSHER • +15 XP EACH</span>
+            <h2 class="font-display font-bold text-3xl mt-2 mb-4">Set a target. Smash it.</h2>
+            <input id="goalTitle" class="inp mb-3" placeholder="e.g. Finish Quadratic Equations ex 2.3">
+            <div class="grid grid-cols-2 gap-3 mb-3">
+              <select id="goalSubject" class="inp"></select>
+              <select id="goalPriority" class="inp"><option value="High">🔴 High priority</option><option value="Medium" selected>🟡 Medium</option><option value="Low">🟢 Low</option></select>
+            </div>
+            <div class="flex gap-3 mb-3"><input id="goalDate" type="date" class="inp"><button id="goalAdd" class="btn-brutal grad-pink px-6 whitespace-nowrap">+ Add</button></div>
+            <div class="flex gap-2 flex-wrap" id="goalFilters"><button class="chip gf active" data-f="all">All</button><button class="chip gf" data-f="open">Open</button><button class="chip gf" data-f="done">Done</button></div>
+            <div class="mt-4"><div class="flex justify-between text-xs font-black mb-1"><span>COMPLETION</span><span id="goalPctTxt">0%</span></div><div class="prog-track"><div id="goalPctBar" class="prog-fill" style="width:0%"></div></div></div>
+          </div>
+          <div class="brutal p-5"><h3 class="font-display font-bold text-xl mb-3">My Missions (<span id="goalCount">0</span>)</h3><div id="goalList" class="space-y-3 max-h-[560px] overflow-auto pr-1"></div></div>
+        </div>
+      </section>
+
+      <!-- ============ NOTES ============ -->
+      <section id="view-notes" class="app-view">
+        <div class="brutal p-5 mb-4 flex flex-col lg:flex-row gap-3 lg:items-center">
+          <div class="flex-1"><h2 class="font-display font-bold text-3xl">Revision Notes <span class="sticker grad-lime ml-1">AUTOSAVED</span></h2><p class="text-sm font-semibold opacity-60">Capture formulas, tricks & summaries. Pin the gold. <span id="noteCount">0</span> notes • <span id="noteWords">0</span> words</p></div>
+          <div class="flex gap-2 flex-wrap"><input id="noteSearch" class="inp !w-56" placeholder="Search notes…"><select id="noteFilter" class="inp !w-44"><option value="all">All subjects</option></select><button id="noteAddBtn" class="btn-brutal grad-pink px-5 py-2.5">+ New Note</button></div>
+        </div>
+        <div id="notesGrid" class="masonry space-y-4"></div>
+      </section>
+
+      <!-- ============ ACHIEVEMENTS ============ -->
+      <section id="view-achievements" class="app-view">
+        <div class="brutal p-6 sm:p-8 mb-4 text-center relative overflow-hidden" style="background:linear-gradient(120deg,#FFC700,#FF2E93,#7C3AED);color:#fff">
+          <div class="absolute inset-0 subj-pattern"></div>
+          <div class="relative"><h2 class="font-display font-bold text-3xl sm:text-5xl" style="text-shadow:3px 3px 0 #141126">Hall of Wins 🏆</h2><p class="font-bold opacity-95"><span id="achUnlocked">0</span>/<span id="achTotal">0</span> unlocked • <span id="achXP">0</span> XP earned</p>
+          <div class="max-w-md mx-auto mt-3 prog-track !border-[#141126]" style="background:rgba(255,255,255,.35)"><div id="achBar" class="prog-fill" style="width:0%;background:#141126"></div></div></div>
+        </div>
+        <div id="achGrid" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+      </section>
+
+      <!-- ============ CONTACT / PORTFOLIO ============ -->
+      <section id="view-contact" class="app-view">
+        <div class="grid xl:grid-cols-2 gap-4 mb-4">
+          <div class="brutal p-6 sm:p-8 relative overflow-hidden">
+            <span class="sticker grad-purple text-white">PORTFOLIO • RUSHABH</span>
+            <h2 class="font-display font-bold text-3xl sm:text-4xl mt-3">Student, builder & <span class="highlight highlight-lime">future topper.</span></h2>
+            <p class="font-semibold opacity-70 text-sm mt-2">Class 10 SSC • Loves Maths + Science • Building the web while preparing for boards. This entire hub is my Advanced JavaScript project — config-driven, storage-powered, event-wired.</p>
+            <div class="flex flex-wrap gap-2 mt-4">
+              <span class="chip !cursor-default">⚡ JavaScript ES6+</span><span class="chip !cursor-default">🎨 CSS + Tailwind</span><span class="chip !cursor-default">📦 LocalStorage</span><span class="chip !cursor-default">📊 Chart.js</span><span class="chip !cursor-default">⏱ Timers & Events</span>
+            </div>
+            <h4 class="font-display font-bold mt-6 mb-2">Journey</h4>
+            <div class="space-y-3">
+              <div class="flex gap-3"><div class="timeline-dot" style="background:#FF2E93"></div><div class="text-sm"><b>2024 — Fell in love with code.</b><br><span class="opacity-70 font-semibold">First HTML page → “I can build anything.”</span></div></div>
+              <div class="flex gap-3"><div class="timeline-dot" style="background:#FFC700"></div><div class="text-sm"><b>2025 — SSC prep + JS deep-dive.</b><br><span class="opacity-70 font-semibold">DOM, storage, timers, quizzes, charts.</span></div></div>
+              <div class="flex gap-3"><div class="timeline-dot" style="background:#06B6D4"></div><div class="text-sm"><b>2026 — Shipped SSC Study Hub v2.4.0.</b><br><span class="opacity-70 font-semibold">8 subjects, 40+ quiz Qs, full dashboard.</span></div></div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mt-5">
+              <img src="https://images.unsplash.com/photo-1509228468518-180dd4864904?w=400&q=80&auto=format&fit=crop" class="rounded-xl border-[3px] border-[#141126] h-24 w-full object-cover wiggle" alt="maths">
+              <img src="https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=400&q=80&auto=format&fit=crop" class="rounded-xl border-[3px] border-[#141126] h-24 w-full object-cover wiggle" alt="science">
+              <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&q=80&auto=format&fit=crop" class="rounded-xl border-[3px] border-[#141126] h-24 w-full object-cover wiggle" alt="study">
+            </div>
+          </div>
+          <div class="brutal p-6 sm:p-8">
+            <span class="sticker grad-pink text-white">SAY HELLO • REPLIES IN 24H</span>
+            <h2 class="font-display font-bold text-3xl mt-2 mb-1">Contact Rushabh</h2>
+            <p class="text-sm font-semibold opacity-60 mb-4">Study collab? Doubt? Feedback on this hub? Drop a message — saved locally + toasted instantly.</p>
+            <form id="contactForm" class="space-y-3" novalidate>
+              <div class="grid sm:grid-cols-2 gap-3"><input id="cName" class="inp" placeholder="Your name *"><input id="cEmail" type="email" class="inp" placeholder="Email *"></div>
+              <select id="cTopic" class="inp"><option>Study together</option><option>Doubt in a subject</option><option>Feedback on Study Hub</option><option>Just saying hi 👋</option></select>
+              <textarea id="cMsg" rows="4" class="inp" placeholder="Write your message… (min 10 characters)"></textarea>
+              <p id="cErr" class="text-sm font-bold text-red-500 hidden"></p>
+              <button type="submit" id="cBtn" class="btn-brutal grad-purple w-full py-3.5">Send Message ✈</button>
+            </form>
+            <div class="mt-4 rounded-2xl border-[3px] border-[#141126] p-3 bg-[#FFF1C9] text-sm font-bold">📬 <span id="msgCount">0</span> messages saved in this browser. I read every single one!</div>
+          </div>
+        </div>
+        <div class="brutal p-6">
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-3"><h3 class="font-display font-bold text-xl">🛠 Under the Hood — Advanced JS Engine</h3><span class="sticker grad-ink">DEV PANEL</span></div>
+          <div class="grid lg:grid-cols-3 gap-4">
+            <div><p class="text-xs font-black tracking-widest mb-2">GLOBAL CONFIG (APP_CONFIG)</p><div class="codebox p-3 h-[190px]" id="configPreview"></div></div>
+            <div><p class="text-xs font-black tracking-widest mb-2">LIVE CONSOLE LOG</p><div class="codebox p-3 h-[190px]" id="devLog" style="color:#8BE9FD"></div></div>
+            <div><p class="text-xs font-black tracking-widest mb-2">STORAGE MANAGER</p>
+              <div id="storageKeys" class="space-y-1.5 text-xs font-bold max-h-[110px] overflow-auto mb-3"></div>
+              <div class="grid grid-cols-2 gap-2"><button id="saveDemoBtn" class="btn-brutal text-xs py-2 bg-white">Save demo</button><button id="retrieveDemoBtn" class="btn-brutal text-xs py-2 bg-white">Retrieve</button><button id="removeDemoBtn" class="btn-brutal text-xs py-2 bg-white">Remove demo</button><button id="clearAllBtn2" class="btn-brutal text-xs py-2 grad-pink">Clear all</button></div>
+              <p class="text-[11px] font-bold opacity-60 mt-2">Demonstrates save • retrieve • remove • clear via localStorage API.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <footer class="mt-8 brutal p-5 flex flex-col sm:flex-row items-center gap-3 justify-between text-sm font-bold">
+      <p>Built with 💜 by <b>Rushabh</b> • SSC Study Hub v2.4.0 • Advanced JavaScript</p>
+      <div class="flex gap-2"><span class="sticker bg-white">8 subjects</span><span class="sticker grad-sun" id="footXP">0 XP</span><button class="sticker grad-pink text-white nav-jump" data-target="contact">Contact →</button></div>
+    </footer>
+  </main>
+</div>
+
+<!-- MOBILE NAV -->
+<nav class="lg:hidden fixed bottom-3 left-3 right-3 z-40 brutal !rounded-2xl px-2 py-2 flex justify-between overflow-x-auto" style="background:var(--glass);backdrop-filter:blur(12px)" id="mobileNav"></nav>
+
+<!-- NOTE MODAL -->
+<div id="noteModal" class="modal-bg"><div class="modal-card brutal w-full max-w-lg p-6">
+  <div class="flex justify-between items-center mb-3"><h3 class="font-display font-bold text-2xl" id="noteModalTitle">New Note</h3><button id="noteClose" class="btn-brutal w-10 h-10 bg-white">✕</button></div>
+  <input id="nTitle" class="inp mb-3" placeholder="Note title… e.g. Quadratic Formula Trick">
+  <div class="grid grid-cols-2 gap-3 mb-3"><select id="nSubject" class="inp"></select><select id="nColor" class="inp"><option value="#FFF1C9">🌼 Yellow</option><option value="#FFD5DC">🌸 Pink</option><option value="#C9F158">🥝 Lime</option><option value="#8BE9FD">🧊 Cyan</option><option value="#D8B4FE">🍇 Purple</option></select></div>
+  <textarea id="nBody" rows="6" class="inp" placeholder="Write it like you'd teach a friend…"></textarea>
+  <p class="text-xs font-bold opacity-60 mt-1"><span id="nWords">0</span> words</p>
+  <button id="nSave" class="btn-brutal grad-pink w-full py-3 mt-3">💾 Save Note</button>
+</div></div>
+
+<!-- LEVEL MODAL -->
+<div id="levelModal" class="modal-bg"><div class="modal-card brutal w-full max-w-sm p-8 text-center" style="background:linear-gradient(135deg,#FFC700,#FF6B35)">
+  <div class="text-7xl mb-2">🚀</div><h3 class="font-display font-bold text-3xl">LEVEL UP!</h3><p class="font-bold" id="levelMsg">You're now Level 2!</p>
+  <button id="levelClose" class="btn-brutal grad-ink w-full py-3 mt-4">Let's gooo →</button>
+</div></div>
+
+<script>
+/* =====================================================================
+   SSC STUDY HUB — ADVANCED JAVASCRIPT  |  Student: Rushabh  | v2.4.0
+   Covers: CONFIG • DOM helpers • Storage • All init processes
+===================================================================== */
+
+// ================= 1) GLOBAL CONFIGURATION FOR THE APP =================
+const APP_CONFIG = {
+  appName: "SSC Study Hub",
+  tagline: "Advanced JavaScript",
+  version: "2.4.0",
+  build: "2026.10.05",
+  student: {
+    name: "Rushabh",
+    fullName: "Rushabh • SSC Batch 2026",
+    grade: "Class 10th • SSC Board (Maharashtra)",
+    school: "SSC Study Hub Campus",
+    motto: "Small daily wins compound into board-exam greatness.",
+    avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=Rushabh&backgroundColor=ffd5dc"
+  },
+  subjects: [
+    { id:"maths1", name:"Maths 1", full:"Mathematics Part 1 • Algebra", group:"maths", color:["#FF2E93","#FF6B35"], icon:"∑", chapters:["Linear Equations","Quadratic Equations","Arithmetic Progression","Financial Planning","Probability","Statistics"], teacher:"Algebra Ace" },
+    { id:"maths2", name:"Maths 2", full:"Mathematics Part 2 • Geometry", group:"maths", color:["#7C3AED","#06B6D4"], icon:"△", chapters:["Similarity","Pythagoras","Circle","Coordinate Geometry","Trigonometry","Mensuration"], teacher:"Geo Guru" },
+    { id:"science1", name:"Science 1", full:"Science & Tech Part 1 • Physics + Chem", group:"science", color:["#FF6B35","#FFC700"], icon:"⚛", chapters:["Gravitation","Periodic Table","Chemical Reactions","Electricity","Heat","Metallurgy"], teacher:"Lab Legend" },
+    { id:"science2", name:"Science 2", full:"Science & Tech Part 2 • Biology", group:"science", color:["#22C55E","#06B6D4"], icon:"❀", chapters:["Heredity","Life Processes","Control & Coordination","Health","Environment","Evolution"], teacher:"Bio Buddy" },
+    { id:"english", name:"English", full:"English • Kumarbharati", group:"lang", color:["#2563EB","#06B6D4"], icon:"Aa", chapters:["Grammar","Writing Skills","Prose","Poetry","Comprehension","Novel"], teacher:"Word Wizard" },
+    { id:"marathi", name:"Marathi", full:"Marathi • Aksharbharati", group:"lang", color:["#F59E0B","#EF4444"], icon:"अ", chapters:["Vyakaran","Lekhan","Gadya","Padya","Patra Lekhan","Nibandh"], teacher:"Bhasha Boss" },
+    { id:"hindi", name:"Hindi", full:"Hindi • Lokbharati", group:"lang", color:["#EC4899","#7C3AED"], icon:"अः", chapters:["Vyakaran","Lekhan","Gadya","Padya","Patra","Nibandh"], teacher:"Hindi Hero" },
+    { id:"sst", name:"Social Science", full:"History + Geography + Civics + Eco", group:"sst", color:["#F97316","#84CC16"], icon:"◍", chapters:["Imperialism","Urbanisation","Physical Geo","Drainage","Democracy","Economy"], teacher:"Civics Star" }
+  ],
+  storageKeys: { xp:"sschub_xp_v1", streak:"sschub_streak_v1", sessions:"sschub_sessions_v1", goals:"sschub_goals_v1", notes:"sschub_notes_v1", progress:"sschub_progress_v1", quizBest:"sschub_quizbest_v1", quizHistory:"sschub_quizhist_v1", marks:"sschub_marks_v1", ach:"sschub_ach_v1", visited:"sschub_visited_v1", msgs:"sschub_msgs_v1", theme:"sschub_theme_v1", demo:"sschub_demo_v1" },
+  xpRewards: { focusSession:20, quizCorrect:10, goalComplete:15, noteCreate:5, calculator90:30, achievement:25 },
+  quotes: [
+    "Small daily wins compound into board-exam greatness.",
+    "Don't watch the clock — do what it does. Keep going.",
+    "Algebra today, engineer tomorrow. Keep solving!",
+    "Revise once more than you think you need to.",
+    "Toppers aren't born. They're scheduled.",
+    "One focused hour beats three distracted ones."
+  ]
+};
+
+// ================= 2) DOM HELPER FUNCTIONS =================
+const $  = (selector, context = document) => context.querySelector(selector);
+const $$ = (selector, context = document) => Array.from(context.querySelectorAll(selector));
+function createEl(tag, opts = {}) {
+  const el = document.createElement(tag);
+  if (opts.class) el.className = opts.class;
+  if (opts.text) el.textContent = opts.text;
+  if (opts.html) el.innerHTML = opts.html;
+  if (opts.attrs) Object.entries(opts.attrs).forEach(([k,v]) => el.setAttribute(k,v));
+  if (opts.style) Object.assign(el.style, opts.style);
+  if (opts.children) opts.children.forEach(c => c && el.appendChild(c));
+  if (opts.on) Object.entries(opts.on).forEach(([ev,fn]) => el.addEventListener(ev,fn));
+  return el;
+}
+
+// ================= 3) LOCAL STORAGE FUNCTIONALITIES =================
+const AppStorage = {
+  save(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); appLog(`💾 save → ${key}`); return true; }
+    catch(e){ console.warn("[SSC Study Hub] save failed", e); return false; }
+  },
+  retrieve(key, fallback = null) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw === null) return fallback;
+      return JSON.parse(raw);
+    } catch(e){ return fallback; }
+  },
+  get(key, fallback = null){ return this.retrieve(key, fallback); },
+  remove(key) { localStorage.removeItem(key); appLog(`🗑 remove → ${key}`); },
+  clear() { localStorage.clear(); appLog("🧹 clear → all app data wiped"); }
+};
+const saveData = (k,v) => AppStorage.save(k,v);
+const retrieveData = (k,f) => AppStorage.retrieve(k,f);
+const removeData = (k) => AppStorage.remove(k);
+const clearData = () => AppStorage.clear();
+
+// dev-log mirror (also proves console logging)
+function appLog(msg){
+  console.log(`[SSC Study Hub v${APP_CONFIG.version}] ${msg}`);
+  const box = $("#devLog");
+  if(box){
+    const line = createEl("div",{text:`› ${msg}`});
+    box.prepend(line);
+    while(box.children.length>40) box.lastChild.remove();
+  }
+}
+
+// ================= STATE =================
+const K = APP_CONFIG.storageKeys;
+const todayStr = () => new Date().toISOString().slice(0,10);
+let State = {
+  xp: AppStorage.retrieve(K.xp, 0),
+  streak: AppStorage.retrieve(K.streak, {count:1,lastDate:todayStr()}),
+  sessions: AppStorage.retrieve(K.sessions, []),
+  goals: AppStorage.retrieve(K.goals, null),
+  notes: AppStorage.retrieve(K.notes, null),
+  progress: AppStorage.retrieve(K.progress, {maths1:68,maths2:52,science1:74,science2:61,english:80,marathi:66,hindi:58,sst:49}),
+  quizBest: AppStorage.retrieve(K.quizBest, {}),
+  quizHistory: AppStorage.retrieve(K.quizHistory, []),
+  marksHistory: AppStorage.retrieve(K.marks, []),
+  achievements: AppStorage.retrieve(K.ach, []),
+  visited: AppStorage.retrieve(K.visited, ["dashboard"]),
+  messages: AppStorage.retrieve(K.msgs, [])
+};
+if(!State.goals){
+  State.goals=[
+    {id:uid(),title:"Finish Quadratic Equations Ex 2.3",subject:"maths1",priority:"High",date:todayStr(),done:false,created:Date.now()},
+    {id:uid(),title:"Revise Electricity numericals (10)",subject:"science1",priority:"Medium",date:todayStr(),done:false,created:Date.now()},
+    {id:uid(),title:"Write 1 English essay + grammar 20 Qs",subject:"english",priority:"Medium",date:todayStr(),done:true,created:Date.now()}
+  ]; AppStorage.save(K.goals,State.goals);
+}
+if(!State.notes){
+  State.notes=[
+    {id:uid(),title:"Quadratic Formula — never forget",subject:"maths1",body:"For ax²+bx+c=0 → x = (-b ± √(b²-4ac))/2a. D>0 two roots, D=0 equal, D<0 no real roots. Practice 5 sums daily!",color:"#FFF1C9",pinned:true,created:Date.now()},
+    {id:uid(),title:"Ohm's Law + Power formulas",subject:"science1",body:"V=IR • P=VI=V²/R=I²R • Series R=R1+R2 • Parallel 1/R=1/R1+1/R2. Units: Volt, Ampere, Ohm, Watt.",color:"#8BE9FD",pinned:true,created:Date.now()},
+    {id:uid(),title:"Essay hooks that fetch marks",subject:"english",body:"Start with a question or quote. 3 paras: intro-body-conclusion. Add 1 idiom + 1 dialogue. Check tenses at the end.",color:"#FFD5DC",pinned:false,created:Date.now()}
+  ]; AppStorage.save(K.notes,State.notes);
+}
+function uid(){ return "id"+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4); }
+function esc(s){ return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+const subjById = id => APP_CONFIG.subjects.find(s=>s.id===id) || APP_CONFIG.subjects[0];
+const levelOf = xp => Math.floor(xp/300)+1;
+
+// ================= QUIZ BANK (8 subjects) =================
+const QUIZ_BANK = {
+maths1:[
+ {q:"If x + 1/x = 4, then x² + 1/x² = ?",o:["14","16","12","18"],a:0,e:"(x+1/x)² = x²+1/x²+2 → 16-2=14."},
+ {q:"The discriminant of 2x² − 5x + 3 = 0 is…",o:["1","−1","49","25"],a:0,e:"D = 25 − 24 = 1."},
+ {q:"5th term of AP: 3, 7, 11, … ?",o:["19","23","15","27"],a:0,e:"a=3,d=4 → a5=3+4×4=19."},
+ {q:"Probability of getting a head on one fair coin?",o:["1","1/2","1/4","0"],a:1,e:"Favourable 1 out of 2 equally likely outcomes."},
+ {q:"Mean of 4, 8, 6, 10, 2 ?",o:["6","5","7","8"],a:0,e:"Sum=30 ÷ 5 = 6."},
+ {q:"If one root of x² − kx + 6 = 0 is 2, k = ?",o:["5","4","3","6"],a:0,e:"4 −2k +6=0 → k=5."},
+ {q:"GST on ₹2000 at 18% ?",o:["₹360","₹180","₹300","₹400"],a:0,e:"2000×0.18=360."},
+ {q:"Which is an arithmetic progression?",o:["2,4,6,8","2,4,8,16","1,4,9,16","3,6,12,24"],a:0,e:"Common difference 2."}
+],
+maths2:[
+ {q:"In a right triangle, hypotenuse 13, base 5. Height?",o:["12","10","8","11"],a:0,e:"√(169−25)=√144=12."},
+ {q:"Similarity criterion with two equal angles?",o:["AA","SSS","SAS","RHS"],a:0,e:"AA similarity."},
+ {q:"Tangent to a circle is ___ to radius at contact.",o:["perpendicular","parallel","equal","bisecting"],a:0,e:"Radius ⟂ tangent."},
+ {q:"Distance between (0,0) and (3,4)?",o:["5","7","25","1"],a:0,e:"3-4-5 triangle."},
+ {q:"sin 30° = ?",o:["1/2","√3/2","1","0"],a:0,e:"Standard value 1/2."},
+ {q:"Area of circle with radius 7 cm (π=22/7)?",o:["154 cm²","44 cm²","308 cm²","77 cm²"],a:0,e:"22/7×49=154."},
+ {q:"Volume of cube of side 4 cm?",o:["64 cm³","16 cm³","48 cm³","32 cm³"],a:0,e:"4³=64."},
+ {q:"Pythagoras triplet?",o:["6,8,10","5,6,7","4,5,6","7,8,9"],a:0,e:"36+64=100."}
+],
+science1:[
+ {q:"SI unit of electric charge?",o:["Coulomb","Ampere","Volt","Ohm"],a:0,e:"Charge → Coulomb (C)."},
+ {q:"Value of 'g' on Earth (approx)?",o:["9.8 m/s²","8.9 m/s²","10.8 m/s²","9.8 km/s²"],a:0,e:"g ≈ 9.8 m/s²."},
+ {q:"pH of neutral solution at 25°C?",o:["7","0","14","1"],a:0,e:"Neutral pH = 7."},
+ {q:"Which gas evolves when Zn + dilute H₂SO₄?",o:["Hydrogen","Oxygen","CO₂","Chlorine"],a:0,e:"Metal + acid → H₂."},
+ {q:"Commercial unit of electrical energy?",o:["kWh","Watt","Joule/sec","Ampere"],a:0,e:"1 unit = 1 kWh."},
+ {q:"Escape velocity from Earth ≈ ?",o:["11.2 km/s","7.9 km/s","3.7 km/s","9.8 km/s"],a:0,e:"≈ 11.2 km/s."},
+ {q:"Modern periodic law was given by?",o:["Moseley","Mendeleev","Dobereiner","Newlands"],a:0,e:"Moseley: atomic number basis."},
+ {q:"Heat required to raise 1kg water by 1°C?",o:["1 kcal","1 cal","1 J","100 J"],a:0,e:"Specific heat of water = 1 kcal/kg°C."}
+],
+science2:[
+ {q:"Powerhouse of the cell?",o:["Mitochondria","Nucleus","Ribosome","Vacuole"],a:0,e:"ATP produced in mitochondria."},
+ {q:"Site of photosynthesis?",o:["Chloroplast","Mitochondria","Nucleus","Cell wall"],a:0,e:"Chlorophyll in chloroplast."},
+ {q:"Functional unit of kidney?",o:["Nephron","Neuron","Alveolus","Glomerulus only"],a:0,e:"Nephron filters blood."},
+ {q:"Hormone for 'fight or flight'?",o:["Adrenaline","Insulin","Thyroxine","Auxin"],a:0,e:"Adrenal gland → adrenaline."},
+ {q:"Genetic material?",o:["DNA","Protein","Lipid","Starch"],a:0,e:"DNA carries heredity info."},
+ {q:"Red blood cells carry…",o:["Oxygen","Hormones","Enzymes","Impulses"],a:0,e:"Haemoglobin binds O₂."},
+ {q:"Ozone layer protects from…",o:["UV rays","IR rays","X-rays","Visible light"],a:0,e:"O₃ absorbs UV."},
+ {q:"Example of biodegradable waste?",o:["Vegetable peels","Plastic","Glass","Aluminium"],a:0,e:"Decomposes naturally."}
+],
+english:[
+ {q:"Choose the correct sentence:",o:["She doesn't like mangoes.","She don't like mangoes.","She doesn't likes mangoes.","She not like mangoes."],a:0,e:"doesn't + base verb."},
+ {q:"Passive of 'Rushabh wrote a poem'?",o:["A poem was written by Rushabh.","A poem is written by Rushabh.","A poem has written Rushabh.","Poem wrote Rushabh."],a:0,e:"Past simple → was + V3."},
+ {q:"Synonym of 'brave'?",o:["Courageous","Timid","Coward","Weak"],a:0,e:"Brave = courageous."},
+ {q:"Correct reported speech: He said, 'I am tired.'",o:["He said that he was tired.","He said that I am tired.","He says he is tired.","He said he is tired."],a:0,e:"Present → past in reporting."},
+ {q:"Antonym of 'victory'?",o:["Defeat","Win","Success","Glory"],a:0,e:"Victory × Defeat."},
+ {q:"Article: ___ honest man.",o:["An","A","The","No article"],a:0,e:"'honest' sounds vowel → an."},
+ {q:"Identify the verb: 'They play cricket daily.'",o:["play","They","cricket","daily"],a:0,e:"'play' is the action."},
+ {q:"Correct spelling?",o:["Occasion","Ocassion","Occassion","Ocasion"],a:0,e:"Double c, single s."}
+],
+marathi:[
+ {q:"'शाळा' या शब्दाचे लिंग कोणते?",o:["स्त्रीलिंग","पुल्लिंग","नपुंसकलिंग","उभयलिंग"],a:0,e:"शाळा → स्त्रीलिंग."},
+ {q:"'विद्यार्थी रोज अभ्यास करतो.' — काळ ओळखा.",o:["वर्तमानकाळ","भूतकाळ","भविष्यकाळ","आज्ञार्थ"],a:0,e:"करतो → वर्तमानकाळ."},
+ {q:"'पुस्तक' चे अनेकवचन?",o:["पुस्तके","पुस्तकं","पुस्तक","पुस्तकां"],a:0,e:"पुस्तक → पुस्तके."},
+ {q:"विरुद्धार्थी शब्द: 'सुख' × ?",o:["दुःख","आनंद","हर्ष","समाधान"],a:0,e:"सुख × दुःख."},
+ {q:"'आईने स्वयंपाक केला.' — प्रयोग?",o:["कर्तरी","कर्मणी","भावे","संकर"],a:0,e:"कर्त्याला 'ने' → कर्तरी (भूतकाळ)."},
+ {q:"समानार्थी: 'पाणी'?",o:["जल","अग्नी","वायू","आकाश"],a:0,e:"पाणी = जल."},
+ {q:"'गोड' या विशेषणाचे नाम?",o:["गोडी","गोडवा","गोडपणा","गोडाई"],a:0,e:"गोड → गोडी/गोडवा."},
+ {q:"पत्रलेखनात शेवटी काय लिहितात?",o:["आपला विश्वासू","प्रिय मित्र","सप्रेम नमस्कार (प्रारंभी)","दिनांक (प्रारंभी)"],a:0,e:"समारोप: आपला विश्वासू."}
+],
+hindi:[
+ {q:"'विद्यालय' का संधि-विच्छेद?",o:["विद्या + आलय","विद्य + आलय","विद्या + लय","वि + द्यालय"],a:0,e:"आ + आ = आ (दीर्घ संधि)."},
+ {q:"'पुस्तक' शब्द का लिंग?",o:["नपुंसकलिंग (हिंदी में पुल्लिंग)","स्त्रीलिंग","उभयलिंग","अव्यय"],a:0,e:"पुस्तक पुल्लिंग है."},
+ {q:"विलोम: 'सुख' × ?",o:["दुःख","खुशी","आनंद","शांति"],a:0,e:"सुख × दुःख."},
+ {q:"'राम फल खाता है' — काल?",o:["वर्तमान","भूत","भविष्य","आज्ञा"],a:0,e:"खाता है → वर्तमान."},
+ {q:"पर्यायवाची: 'पानी'?",o:["जल","आग","हवा","धरती"],a:0,e:"पानी = जल, नीर, तोय."},
+ {q:"मुहावरा 'नौ दो ग्यारह होना' अर्थ?",o:["भाग जाना","आ जाना","सो जाना","खा लेना"],a:0,e:"मतलब फरार/भाग जाना."},
+ {q:"'ईमानदार' में प्रत्यय?",o:["दार","ईमान","मान","र"],a:0,e:"ईमान + दार."},
+ {q:"शुद्ध वर्तनी?",o:["विद्यालय","विध्यालय","विदयालय","विद्यालया"],a:0,e:"वि-द्या-लय."}
+],
+sst:[
+ {q:"First World War began in which year?",o:["1914","1919","1939","1945"],a:0,e:"28 July 1914."},
+ {q:"Tropic of Cancer passes through how many Indian states?",o:["8","7","6","9"],a:0,e:"Gujarat to Mizoram — 8 states."},
+ {q:"Which is the longest river of peninsular India?",o:["Godavari","Krishna","Narmada","Mahanadi"],a:0,e:"Godavari ≈ 1465 km."},
+ {q:"Indian Constitution came into force on?",o:["26 Jan 1950","15 Aug 1947","26 Nov 1949","2 Oct 1950"],a:0,e:"Republic Day 1950."},
+ {q:"Which soil is best for cotton (Maharashtra)?",o:["Black (Regur)","Alluvial","Red","Laterite"],a:0,e:"Deccan black soil."},
+ {q:"Headquarters of the United Nations?",o:["New York","Geneva","Paris","London"],a:0,e:"UN HQ — New York."},
+ {q:"Who is called the Father of Indian Constitution?",o:["Dr. B. R. Ambedkar","Gandhiji","Nehru","Patel"],a:0,e:"Drafting Committee Chairman."},
+ {q:"Sahara desert is located in?",o:["Africa","Asia","Australia","S. America"],a:0,e:"North Africa."}
+]
+};
+
+const ACHIEVEMENTS = [
+ {id:"first-focus",name:"First Focus",desc:"Complete 1 pomodoro session",icon:"🍅",check:s=>s.sessions.length>=1},
+ {id:"marathon",name:"Focus Marathon",desc:"Complete 5 focus sessions",icon:"🚀",check:s=>s.sessions.length>=5},
+ {id:"quiz-rookie",name:"Quiz Rookie",desc:"Attempt your first quiz",icon:"✎",check:s=>s.quizHistory.length>=1},
+ {id:"quiz-whiz",name:"Quiz Whiz",desc:"Score 80%+ in any quiz",icon:"🧠",check:s=>s.quizHistory.some(h=>h.pct>=80)},
+ {id:"goal-crusher",name:"Goal Crusher",desc:"Complete 3 goals",icon:"◎",check:s=>s.goals.filter(g=>g.done).length>=3},
+ {id:"note-taker",name:"Note Ninja",desc:"Create 5 revision notes",icon:"✦",check:s=>s.notes.length>=5},
+ {id:"scholar",name:"Board Scholar",desc:"Hit 90%+ in marks calculator",icon:"🎓",check:s=>s.marksHistory.some(m=>m.pct>=90)},
+ {id:"explorer",name:"Explorer",desc:"Visit all 9 sections",icon:"🧭",check:s=>s.visited.length>=9},
+ {id:"xp1000",name:"XP Legend",desc:"Earn 1000 total XP",icon:"⚡",check:s=>s.xp>=1000}
+];
+
+/* ================= HELPERS: toast / confetti / xp ================= */
+function toast(msg, color="#fff"){
+  const t = createEl("div",{class:"toast",html:`<span style="font-size:1.3rem">✦</span><span>${msg}</span>`});
+  t.style.background = color; if(color!=="#fff"){ t.style.color="#141126"; }
+  $("#toastWrap").appendChild(t);
+  setTimeout(()=>{ t.classList.add("out"); setTimeout(()=>t.remove(),400); }, 3400);
+}
+function boom(big=false){
+  if(typeof confetti==="undefined") return;
+  confetti({particleCount:big?160:70,spread:75,origin:{y:.25},colors:["#FF2E93","#FFC700","#7C3AED","#06B6D4","#A3E635"]});
+}
+function addXP(n, reason=""){
+  const before = levelOf(State.xp);
+  State.xp += n; AppStorage.save(K.xp, State.xp);
+  appLog(`+${n} XP ${reason} (total ${State.xp})`);
+  const after = levelOf(State.xp);
+  if(after>before){ $("#levelMsg").textContent=`You're now Level ${after} — ${State.xp} XP! ${reason}`; $("#levelModal").classList.add("open"); boom(true); }
+  updateDashboard(); checkAchievements();
+}
+function checkAchievements(){
+  let fresh=false;
+  ACHIEVEMENTS.forEach(a=>{
+    if(!State.achievements.includes(a.id) && a.check(State)){
+      State.achievements.push(a.id); fresh=true;
+      addXPNoRecheck(APP_CONFIG.xpRewards.achievement, `for "${a.name}"`);
+      toast(`🏆 Achievement unlocked: <b>${a.icon} ${a.name}</b>! +25 XP`);
+      boom(true); appLog(`🏆 unlocked → ${a.id}`);
+    }
+  });
+  if(fresh){ AppStorage.save(K.ach,State.achievements); renderAchievements(); }
+}
+function addXPNoRecheck(n,reason){ State.xp+=n; AppStorage.save(K.xp,State.xp); }
+
+/* ================= 4) APPLICATION INITIALIZATION PROCESSES ================= */
+
+// ---- initLoading: loader overlay + progress ----
+function initLoading(){
+  const msgs=["Loading Rushabh's dashboard…","Warming up quiz engine…","Syncing localStorage…","Polishing gradients…","Ready to top the boards!"];
+  let p=0; const fill=$("#loaderFill"), msg=$("#loaderMsg");
+  const iv=setInterval(()=>{ p=Math.min(100,p+Math.random()*22); fill.style.width=p+"%"; msg.textContent=msgs[Math.min(msgs.length-1,Math.floor(p/22))]; if(p>=100) clearInterval(iv); },180);
+  const hide=()=>{ $("#loader").classList.add("done"); appLog(`App loaded in ${(performance.now()/1000).toFixed(2)}s`); };
+  window.addEventListener("load",()=>setTimeout(hide,900));
+  setTimeout(()=>$("#loader").classList.add("done"),3800); // fallback
+  appLog("initLoading → loader armed");
+}
+
+// ---- initNavigation: SPA view switching + mobile nav ----
+const NAV_ITEMS=[
+ {t:"dashboard",label:"Home",icon:"◈"},{t:"subjects",label:"Subjects",icon:"▣"},{t:"timer",label:"Timer",icon:"◐"},
+ {t:"quiz",label:"Quiz",icon:"✎"},{t:"calculator",label:"Marks",icon:"%"},{t:"goals",label:"Goals",icon:"◎"},
+ {t:"notes",label:"Notes",icon:"✦"},{t:"achievements",label:"Wins",icon:"★"},{t:"contact",label:"Contact",icon:"☺"}
+];
+function switchView(target){
+  $$(".app-view").forEach(v=>v.classList.remove("active"));
+  const sec=$("#view-"+target); if(sec) sec.classList.add("active");
+  $$("#mainNav .nav-link").forEach(b=>b.classList.toggle("active",b.dataset.target===target));
+  $$("#mobileNav button").forEach(b=>b.classList.toggle("!bg-[#141126]",b.dataset.target===target));
+  $$("#mobileNav button").forEach(b=>b.classList.toggle("!text-white",b.dataset.target===target));
+  if(!State.visited.includes(target)){ State.visited.push(target); AppStorage.save(K.visited,State.visited); checkAchievements(); }
+  $("#sidebar").classList.remove("open"); $("#sidebarOverlay").classList.add("hidden");
+  window.scrollTo({top:0,behavior:"smooth"});
+  requestAnimationFrame(()=>observeReveals());
+  appLog(`navigate → ${target}`);
+  location.hash=target;
+}
+function initNavigation(){
+  $$("#mainNav .nav-link").forEach(b=>b.addEventListener("click",()=>switchView(b.dataset.target)));
+  $$(".nav-jump").forEach(b=>b.addEventListener("click",()=>switchView(b.dataset.target)));
+  const mn=$("#mobileNav");
+  NAV_ITEMS.forEach(n=>{
+    const b=createEl("button",{class:"flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl font-black text-[11px] border-2 border-transparent whitespace-nowrap",html:`<span class="text-lg leading-none">${n.icon}</span>${n.label}`,attrs:{"data-target":n.t},on:{click:()=>switchView(n.t)}});
+    if(n.t==="dashboard"){b.classList.add("!bg-[#141126]","!text-white");}
+    mn.appendChild(b);
+  });
+  $("#menuBtn").addEventListener("click",()=>{ $("#sidebar").classList.add("open"); $("#sidebarOverlay").classList.remove("hidden"); });
+  $("#sidebarOverlay").addEventListener("click",()=>{ $("#sidebar").classList.remove("open"); $("#sidebarOverlay").classList.add("hidden"); });
+  $("#levelClose").addEventListener("click",()=>$("#levelModal").classList.remove("open"));
+  const h=location.hash.replace("#",""); if(h && $("#view-"+h)) switchView(h);
+  appLog("initNavigation → 9 views wired");
+}
+
+// ---- initTheme: theme initialization + toggle ----
+function initTheme(){
+  const saved=AppStorage.retrieve(K.theme,"light");
+  document.documentElement.dataset.theme=saved; paintThemeLabel();
+  $("#themeToggle").addEventListener("click",()=>{
+    const cur=document.documentElement.dataset.theme==="light"?"dark":"light";
+    document.documentElement.dataset.theme=cur; AppStorage.save(K.theme,cur); paintThemeLabel();
+    toast(cur==="dark"?"🌙 Midnight mode ON — easy on the eyes!":"☀️ Vibrant mode ON — full energy!");
+    appLog(`theme → ${cur}`); drawChart();
+  });
+  function paintThemeLabel(){
+    const dark=document.documentElement.dataset.theme==="dark";
+    $("#themeToggle").textContent=dark?"☀":"◑";
+    $("#themeLabel").textContent=dark?"Midnight Scholar — calm focus mode":"Vibrant Light — high energy mode";
+  }
+  appLog("initTheme → "+saved);
+}
+
+// ---- initSubjectSearch: global + subject search + filters ----
+let subjFilter="all";
+function renderSubjects(){
+  const q=($("#subjectSearch").value||"").toLowerCase().trim();
+  const gq=($("#globalSearch").value||"").toLowerCase().trim();
+  const query=q||gq;
+  const grid=$("#subjectGrid"); grid.innerHTML="";
+  let shown=0;
+  APP_CONFIG.subjects.forEach(s=>{
+    const matchQ=!query||s.name.toLowerCase().includes(query)||s.full.toLowerCase().includes(query);
+    const matchG=subjFilter==="all"||s.group===subjFilter;
+    if(!matchQ||!matchG) return; shown++;
+    const prog=State.progress[s.id]??50;
+    const card=createEl("div",{class:"brutal brutal-hover overflow-hidden reveal revealed"});
+    card.innerHTML=`
+      <div class="p-5 relative" style="background:linear-gradient(135deg,${s.color[0]},${s.color[1]})">
+        <div class="absolute inset-0 subj-pattern"></div>
+        <div class="relative flex items-start justify-between">
+          <div class="w-14 h-14 rounded-2xl bg-white grid place-items-center font-display font-bold text-2xl border-[3px] border-[#141126]">${s.icon}</div>
+          <span class="sticker bg-white !text-[11px]">${s.group.toUpperCase()}</span>
+        </div>
+        <h3 class="relative font-display font-bold text-2xl text-white mt-3" style="text-shadow:2px 2px 0 #141126">${s.name}</h3>
+        <p class="relative text-white/95 text-xs font-bold">${s.full}</p>
+      </div>
+      <div class="p-5">
+        <div class="flex justify-between text-xs font-black mb-1"><span>SYLLABUS</span><span style="color:${s.color[0]}">${prog}%</span></div>
+        <div class="prog-track mb-2"><div class="prog-fill" style="width:${prog}%;background:linear-gradient(90deg,${s.color[0]},${s.color[1]})"></div></div>
+        <input type="range" min="0" max="100" value="${prog}" class="range subj-range" data-id="${s.id}">
+        <p class="text-xs font-bold opacity-60 mt-2">📚 ${s.chapters.length} units • ${s.chapters.slice(0,2).join(" • ")}…</p>
+        <div class="grid grid-cols-2 gap-2 mt-3">
+          <button class="btn-brutal text-xs py-2 bg-white subj-quiz" data-id="${s.id}">✎ Quiz</button>
+          <button class="btn-brutal text-xs py-2 text-white subj-note" data-id="${s.id}" style="background:${s.color[0]}">+ Note</button>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+  $("#subjCount").textContent=shown;
+  if(!shown) grid.innerHTML=`<div class="brutal p-10 text-center col-span-full"><p class="font-display font-bold text-2xl">No subjects found 😅</p><p class="font-bold opacity-60 text-sm">Try “science”, “hindi” or clear the search.</p></div>`;
+  $$(".subj-range",grid).forEach(r=>r.addEventListener("input",e=>{
+    State.progress[e.target.dataset.id]=+e.target.value; AppStorage.save(K.progress,State.progress);
+    e.target.closest(".brutal").querySelector(".prog-fill").style.width=e.target.value+"%";
+    e.target.closest(".brutal").querySelector(".flex.justify-between span:last-child").textContent=e.target.value+"%";
+    updateDashboard();
+  }));
+  $$(".subj-range",grid).forEach(r=>r.addEventListener("change",()=>{ appLog("progress updated"); drawChart(); }));
+  $$(".subj-quiz",grid).forEach(b=>b.addEventListener("click",()=>{ presetQuizSubject(b.dataset.id); switchView("quiz"); }));
+  $$(".subj-note",grid).forEach(b=>b.addEventListener("click",()=>{ openNoteModal(null,b.dataset.id); }));
+}
+function initSubjectSearch(){
+  $("#subjectSearch").addEventListener("input",renderSubjects);
+  $("#subjectFilter").addEventListener("change",e=>{subjFilter=e.target.value;renderSubjects();});
+  $("#globalSearch").addEventListener("input",e=>{
+    const v=e.target.value.trim();
+    if(v && !$("#view-subjects").classList.contains("active")){ /* stay, but sync */ }
+    if($("#view-subjects").classList.contains("active")) renderSubjects();
+    // live filter notes too
+    if($("#view-notes").classList.contains("active")) renderNotes();
+    if(v.length>1 && $("#view-dashboard").classList.contains("active")){ switchView("subjects"); $("#subjectSearch").value=v; renderSubjects(); }
+  });
+  $("#globalSearch").addEventListener("keydown",e=>{ if(e.key==="Enter"){ switchView("subjects"); $("#subjectSearch").value=e.target.value; renderSubjects(); }});
+  appLog("initSubjectSearch → live filtering ready");
+}
+
+// ---- initTimer: study timer ----
+const Timer={dur:25*60,left:25*60,run:false,iv:null,label:"Focus 25"};
+const CIRC=741.4;
+function fmt(s){return `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;}
+function paintTimer(){
+  $("#timerText").textContent=fmt(Timer.left);
+  $("#miniTimerText").textContent=fmt(Timer.left);
+  $("#timerRing").style.strokeDashoffset=CIRC*(1-Timer.left/Timer.dur);
+  $("#timerModeLabel").textContent=Timer.label.toUpperCase();
+}
+function beep(){ if(!$("#soundOn").checked) return; try{ const ctx=new (window.AudioContext||window.webkitAudioContext)(); const o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g);g.connect(ctx.destination); o.frequency.value=880; o.type="sine"; g.gain.setValueAtTime(.25,ctx.currentTime); o.start(); o.stop(ctx.currentTime+.6);}catch(e){} }
+function finishSession(){
+  Timer.run=false; clearInterval(Timer.iv); $("#timerStart").textContent="▶ Start"; $("#timerStatus").textContent="DONE! +20 XP";
+  beep(); boom();
+  State.sessions.push({mins:Math.round(Timer.dur/60),date:todayStr(),ts:Date.now(),label:Timer.label});
+  AppStorage.save(K.sessions,State.sessions);
+  // streak bump
+  const st=State.streak;
+  if(st.lastDate!==todayStr()){ const y=new Date(Date.now()-864e5).toISOString().slice(0,10); st.count=(st.lastDate===y)?st.count+1:1; st.lastDate=todayStr(); AppStorage.save(K.streak,st); }
+  addXP(APP_CONFIG.xpRewards.focusSession,`for ${Timer.label}`);
+  toast(`🍅 Session complete! <b>+20 XP</b> — take a stretch break.`);
+  Timer.left=Timer.dur; paintTimer(); renderSessions(); updateDashboard();
+}
+function initTimer(){
+  paintTimer(); renderSessions();
+  $$(".timer-preset").forEach(b=>b.addEventListener("click",()=>{
+    $$(".timer-preset").forEach(x=>x.classList.remove("active")); b.classList.add("active");
+    Timer.dur=Timer.left=+b.dataset.min*60; Timer.label=b.dataset.label; Timer.run=false; clearInterval(Timer.iv);
+    $("#timerStart").textContent="▶ Start"; $("#timerStatus").textContent="READY"; paintTimer();
+  }));
+  $$(".mini-preset").forEach(b=>b.addEventListener("click",()=>{
+    $$(".mini-preset").forEach(x=>x.classList.remove("active")); b.classList.add("active");
+    Timer.dur=Timer.left=+b.dataset.min*60; Timer.label="Focus "+b.dataset.min; paintTimer(); switchView("timer");
+  }));
+  $("#customSet").addEventListener("click",()=>{ const m=Math.max(1,Math.min(180,+$("#customMins").value||25)); Timer.dur=Timer.left=m*60; Timer.label="Custom "+m; paintTimer(); toast(`⏱ Timer set to ${m} minutes`); });
+  $("#timerStart").addEventListener("click",()=>{
+    if(Timer.run) return; Timer.run=true; $("#timerStart").textContent="● Running…"; $("#timerStatus").textContent="FOCUSING — YOU GOT THIS";
+    Timer.iv=setInterval(()=>{ Timer.left--; paintTimer(); if(Timer.left<=0) finishSession(); },1000);
+    appLog("timer started: "+Timer.label);
+  });
+  $("#timerPause").addEventListener("click",()=>{ Timer.run=false; clearInterval(Timer.iv); $("#timerStart").textContent="▶ Resume"; $("#timerStatus").textContent="PAUSED"; });
+  $("#timerReset").addEventListener("click",()=>{ Timer.run=false; clearInterval(Timer.iv); Timer.left=Timer.dur; $("#timerStart").textContent="▶ Start"; $("#timerStatus").textContent="READY"; paintTimer(); });
+  appLog("initTimer → pomodoro engine ready");
+}
+function renderSessions(){
+  const today=State.sessions.filter(s=>s.date===todayStr());
+  const mins=State.sessions.reduce((a,s)=>a+s.mins,0);
+  $("#sessToday").textContent=today.length; $("#sessTotal").textContent=State.sessions.length; $("#sessMins").textContent=mins+"m";
+  const list=$("#sessionList"); list.innerHTML="";
+  if(!State.sessions.length){ list.innerHTML=`<p class="text-sm font-bold opacity-50 text-center py-4">No sessions yet — your first 🍅 awaits!</p>`; return; }
+  [...State.sessions].reverse().slice(0,8).forEach(s=>{
+    list.appendChild(createEl("div",{class:"flex items-center gap-3 rounded-xl border-2 border-[#141126] p-2.5 text-sm font-bold bg-white",html:`<span class="w-9 h-9 grid place-items-center rounded-lg text-white font-black" style="background:linear-gradient(135deg,#FF2E93,#FF6B35)">🍅</span><span>${s.label} • ${s.mins} min</span><span class="ml-auto text-xs opacity-60">${s.date}</span>`}));
+  });
+}
+
+// ---- initQuiz: quiz setup + engine ----
+let Quiz={sub:"maths1",n:5,diff:"Mixed",qs:[],i:0,score:0,answers:[],t:30,iv:null,locked:false};
+function presetQuizSubject(id){ Quiz.sub=id; renderQuizSubjects(); }
+function renderQuizSubjects(){
+  const w=$("#quizSubjects"); w.innerHTML="";
+  APP_CONFIG.subjects.forEach(s=>{
+    const b=createEl("button",{class:"chip"+(Quiz.sub===s.id?" active":""),text:`${s.icon} ${s.name}`,on:{click:()=>{Quiz.sub=s.id;renderQuizSubjects();}}});
+    w.appendChild(b);
+  });
+}
+function renderBest(){
+  const w=$("#bestScores"); w.innerHTML="";
+  APP_CONFIG.subjects.forEach(s=>{
+    const b=State.quizBest[s.id];
+    w.appendChild(createEl("div",{class:"flex items-center gap-2 text-sm font-bold rounded-xl border-2 border-[#141126] p-2 bg-white",html:`<span class="w-8 h-8 grid place-items-center rounded-lg text-white" style="background:${s.color[0]}">${s.icon}</span><span>${s.name}</span><span class="ml-auto sticker ${b!=null?"grad-lime":"bg-[#eee]"} !text-[11px]">${b!=null?b+"%":"—"}</span>`}));
+  });
+  const h=$("#quizHistory"); h.innerHTML=State.quizHistory.length?"":`<p class="text-sm font-bold opacity-50">No attempts yet. Be the first!</p>`;
+  [...State.quizHistory].reverse().slice(0,6).forEach(x=>{
+    h.appendChild(createEl("div",{class:"flex items-center gap-2 text-sm font-bold rounded-xl border-2 p-2",style:{borderColor:"#141126",background:x.pct>=80?"#C9F158":x.pct>=50?"#FFF1C9":"#FFD5DC"},html:`<span>${subjById(x.sub).icon} ${subjById(x.sub).name}</span><span class="ml-auto">${x.score}/${x.total} • ${x.pct}%</span>`}));
+  });
+}
+function startQuiz(){
+  let pool=[...(QUIZ_BANK[Quiz.sub]||[])];
+  if(Quiz.diff==="Easy") pool=pool.slice(0,5); if(Quiz.diff==="Hard") pool=pool.slice(-5);
+  pool=pool.sort(()=>Math.random()-.5).slice(0,Math.min(Quiz.n,pool.length));
+  // top-up by shuffling duplicates if needed
+  while(pool.length<Quiz.n){ pool.push(QUIZ_BANK[Quiz.sub][Math.floor(Math.random()*QUIZ_BANK[Quiz.sub].length)]); }
+  Quiz.qs=pool; Quiz.i=0; Quiz.score=0; Quiz.answers=[];
+  $("#quizSetup").classList.add("hidden"); $("#quizResult").classList.add("hidden"); $("#quizPlay").classList.remove("hidden");
+  $("#quizQTotal").textContent=Quiz.qs.length; $("#quizPlaySub").textContent=subjById(Quiz.sub).name+" • "+Quiz.diff;
+  showQ(); appLog(`quiz started → ${Quiz.sub} × ${Quiz.qs.length}`);
+}
+function showQ(){
+  Quiz.locked=false; const q=Quiz.qs[Quiz.i];
+  $("#quizQNum").textContent=Quiz.i+1; $("#quizLiveScore").textContent=Quiz.score;
+  $("#quizProg").style.width=(Quiz.i/Quiz.qs.length*100)+"%";
+  $("#quizQ").textContent=(Quiz.i+1)+". "+q.q;
+  const box=$("#quizOpts"); box.innerHTML="";
+  const letters=["A","B","C","D"];
+  q.o.forEach((opt,idx)=>{
+    const b=createEl("button",{class:"quiz-opt",html:`<span class="w-8 h-8 grid place-items-center rounded-lg border-2 border-[#141126] font-black bg-[#FFC700]">${letters[idx]}</span><span>${esc(opt)}</span>`,on:{click:()=>answerQ(idx,b)}});
+    box.appendChild(b);
+  });
+  $("#quizNext").disabled=true;
+  clearInterval(Quiz.iv); Quiz.t=30; $("#quizQTime").textContent=30;
+  Quiz.iv=setInterval(()=>{ Quiz.t--; $("#quizQTime").textContent=Quiz.t; if(Quiz.t<=0){ clearInterval(Quiz.iv); answerQ(-1,null);} },1000);
+}
+function answerQ(idx,btn){
+  if(Quiz.locked) return; Quiz.locked=true; clearInterval(Quiz.iv);
+  const q=Quiz.qs[Quiz.i]; const opts=$$("#quizOpts .quiz-opt");
+  opts.forEach((o,i)=>{ if(i===q.a) o.classList.add("correct"); });
+  let ok=idx===q.a;
+  if(ok){ Quiz.score++; if(btn) btn.classList.add("correct"); addXPNoRecheck(APP_CONFIG.xpRewards.quizCorrect,"quiz correct"); }
+  else if(btn) btn.classList.add("wrong"); else if(opts[0]) opts[0].classList.add("shake");
+  Quiz.answers.push({q:q.q,pick:idx,correct:q.a,ok,exp:q.e});
+  $("#quizLiveScore").textContent=Quiz.score; $("#quizNext").disabled=false;
+  AppStorage.save(K.xp,State.xp); updateDashboard();
+}
+function endQuiz(){
+  clearInterval(Quiz.iv);
+  $("#quizPlay").classList.add("hidden"); $("#quizResult").classList.remove("hidden");
+  const total=Quiz.qs.length, pct=Math.round(Quiz.score/total*100);
+  $("#quizScoreBig").textContent=`${Quiz.score}/${total} • ${pct}%`;
+  $("#quizScoreBar").style.width=pct+"%";
+  $("#quizEmoji").textContent=pct>=90?"🏆":pct>=80?"🎉":pct>=50?"💪":"📚";
+  $("#quizRemark").textContent=pct>=90?"Outstanding! Board-topper energy. +bonus incoming.":pct>=80?"Brilliant! Quiz Whiz territory.":pct>=50?"Good fight — revise the ones below and retry!":"Every topper starts here. Review + retry! 💜";
+  const rev=$("#quizReview"); rev.innerHTML="";
+  Quiz.answers.forEach((a,i)=>{
+    rev.appendChild(createEl("div",{class:"rounded-xl border-2 border-[#141126] p-3 text-sm font-bold",style:{background:a.ok?"#C9F158":"#FFD5DC"},html:`<p>${i+1}. ${esc(a.q)}</p><p class="text-xs mt-1 opacity-80">Your pick: ${a.pick<0?"⏱ Timeout":esc(Quiz.qs[i].o[a.pick])} ${a.ok?"✅":"❌"} • Answer: ${esc(Quiz.qs[i].o[a.correct])}<br>💡 ${esc(a.exp)}</p>`}));
+  });
+  State.quizHistory.push({sub:Quiz.sub,score:Quiz.score,total,pct,date:todayStr()});
+  if(State.quizBest[Quiz.sub]==null||pct>State.quizBest[Quiz.sub]) State.quizBest[Quiz.sub]=pct;
+  AppStorage.save(K.quizHistory,State.quizHistory); AppStorage.save(K.quizBest,State.quizBest);
+  if(pct>=80) boom(true); else if(pct>=50) boom();
+  appLog(`quiz finished → ${Quiz.score}/${total} (${pct}%)`);
+  renderBest(); updateDashboard(); checkAchievements();
+}
+function initQuiz(){
+  renderQuizSubjects(); renderBest();
+  $$(".qcount").forEach(b=>b.addEventListener("click",()=>{$$(".qcount").forEach(x=>x.classList.remove("active"));b.classList.add("active");Quiz.n=+b.dataset.n;}));
+  $$(".qdiff").forEach(b=>b.addEventListener("click",()=>{$$(".qdiff").forEach(x=>x.classList.remove("active"));b.classList.add("active");Quiz.diff=b.dataset.d;}));
+  $("#quizStartBtn").addEventListener("click",startQuiz);
+  $("#quizNext").addEventListener("click",()=>{ Quiz.i++; if(Quiz.i<Quiz.qs.length) showQ(); else endQuiz(); });
+  $("#quizQuit").addEventListener("click",()=>{ clearInterval(Quiz.iv); $("#quizPlay").classList.add("hidden"); $("#quizSetup").classList.remove("hidden"); });
+  $("#quizRetry").addEventListener("click",startQuiz);
+  $("#quizHome").addEventListener("click",()=>{ $("#quizResult").classList.add("hidden"); $("#quizSetup").classList.remove("hidden"); });
+  appLog("initQuiz → bank loaded ("+Object.keys(QUIZ_BANK).length+" subjects)");
+}
+
+// ---- initProgress: progress system + chart ----
+let chart=null;
+function drawChart(){
+  const c=$("#progressChart"); if(!c||typeof Chart==="undefined") return;
+  if(chart) chart.destroy();
+  const labels=APP_CONFIG.subjects.map(s=>s.name), data=APP_CONFIG.subjects.map(s=>State.progress[s.id]??0);
+  const dark=document.documentElement.dataset.theme==="dark";
+  chart=new Chart(c,{type:"doughnut",data:{labels,datasets:[{data,backgroundColor:["#FF2E93","#7C3AED","#FF6B35","#22C55E","#2563EB","#F59E0B","#EC4899","#84CC16"],borderColor:dark?"#1B1650":"#fff",borderWidth:4}]},options:{cutout:"62%",plugins:{legend:{position:"bottom",labels:{boxWidth:12,font:{weight:"bold",size:10},color:dark?"#fff":"#141126"}}}}});
+}
+function initProgress(){
+  drawChart(); appLog("initProgress → chart + bars wired");
+}
+
+// ---- initMarksCalculator ----
+function buildMarksInputs(){
+  const w=$("#marksInputs"); w.innerHTML="";
+  APP_CONFIG.subjects.forEach(s=>{
+    const saved=(State.marksHistory[0]?.marks||{})[s.id]??"";
+    w.appendChild(createEl("div",{html:`<label class="text-xs font-black flex justify-between mb-1"><span>${s.icon} ${s.name.toUpperCase()}</span><span class="opacity-50">/100</span></label><input type="number" min="0" max="100" data-id="${s.id}" value="${saved}" placeholder="0–100" class="inp marks-inp text-center !text-lg">`}));
+  });
+}
+function gradeOf(p){ if(p>=90)return["A+ 🌟","Board-topper zone! Scholarship vibes."]; if(p>=80)return["A 🎉","Excellent — push for 90+!"]; if(p>=70)return["B+ 💪","Good — fix 2 weak chapters."]; if(p>=60)return["B 📗","Fair — daily revision needed."]; if(p>=50)return["C 📘","Passing — time to sprint!"]; if(p>=35)return["D ⚠️","Just passed — let's rebuild basics."]; return["F ❌","Don't quit — one chapter a day!"]; }
+function initMarksCalculator(){
+  buildMarksInputs();
+  const calc=()=>{
+    let total=0,vals={},count=0;
+    $$(".marks-inp").forEach(i=>{ let v=Math.max(0,Math.min(100,+i.value||0)); i.value=i.value===""?"":v; vals[i.dataset.id]=+i.value||0; total+=+i.value||0; if(i.value!=="")count++; });
+    const pct=+(total/8).toFixed(1);
+    const [g,rem]=gradeOf(pct);
+    $("#calcPct").textContent=pct; $("#calcBar").style.width=pct+"%";
+    $("#calcGrade").textContent="Grade: "+g; $("#calcRemark").textContent=rem;
+    $("#calcTotal").textContent=total+"/800"; $("#calcGPA").textContent=(pct/9.5).toFixed(1);
+    $("#calcNeed").textContent=Math.max(0,Math.ceil(720-total))+" marks";
+    const br=$("#calcBreak"); br.innerHTML="";
+    APP_CONFIG.subjects.forEach(s=>{
+      const m=vals[s.id]||0;
+      br.appendChild(createEl("div",{html:`<div class="flex justify-between text-xs font-black"><span>${s.icon} ${s.name}</span><span>${m}/100</span></div><div class="prog-track"><div class="prog-fill" style="width:${m}%;background:linear-gradient(90deg,${s.color[0]},${s.color[1]})"></div></div>`}));
+    });
+    State.marksHistory.unshift({marks:vals,total,pct,date:new Date().toLocaleString()});
+    State.marksHistory=State.marksHistory.slice(0,10); AppStorage.save(K.marks,State.marksHistory);
+    if(pct>=90){ addXP(APP_CONFIG.xpRewards.calculator90,"for 90%+ projection"); boom(true); }
+    appLog(`calculator → ${total}/800 = ${pct}% (${g})`); updateDashboard(); checkAchievements();
+  };
+  $("#calcBtn").addEventListener("click",calc);
+  $("#calcClear").addEventListener("click",()=>{ $$(".marks-inp").forEach(i=>i.value=""); toast("🧹 Calculator cleared"); });
+  $("#calcSample").addEventListener("click",()=>{ const demo=[96,92,97,94,95,93,91,96]; $$(".marks-inp").forEach((i,idx)=>i.value=demo[idx]); calc(); });
+  appLog("initMarksCalculator → 8-subject engine ready");
+}
+
+// ---- initGoals ----
+let goalFilter="all";
+function renderGoals(){
+  const list=$("#goalList"); list.innerHTML="";
+  const sel=$("#goalSubject"); if(!sel.options.length){ APP_CONFIG.subjects.forEach(s=>sel.appendChild(createEl("option",{text:s.name,attrs:{value:s.id}}))); }
+  let arr=[...State.goals].sort((a,b)=>(a.done-b.done)||(b.created-a.created));
+  if(goalFilter!=="all") arr=arr.filter(g=>goalFilter==="done"?g.done:!g.done);
+  $("#goalCount").textContent=State.goals.length;
+  const done=State.goals.filter(g=>g.done).length, pct=State.goals.length?Math.round(done/State.goals.length*100):0;
+  $("#goalPctBar").style.width=pct+"%"; $("#goalPctTxt").textContent=pct+"%";
+  if(!arr.length){ list.innerHTML=`<p class="text-sm font-bold opacity-50 text-center py-6">Nothing here — add your first mission! 🚀</p>`; }
+  arr.forEach(g=>{
+    const s=subjById(g.subject);
+    const row=createEl("div",{class:"rounded-2xl border-[3px] border-[#141126] p-3 flex gap-3 items-start bg-white tick"+(g.done?" opacity-80":"")});
+    row.innerHTML=`
+      <button class="w-8 h-8 rounded-lg border-[3px] border-[#141126] grid place-items-center font-black shrink-0 goal-tog" style="background:${g.done?"#A3E635":"#fff"}">${g.done?"✓":""}</button>
+      <div class="min-w-0 flex-1"><p class="font-bold text-sm ${g.done?"goal-done":""}">${esc(g.title)}</p>
+      <div class="flex flex-wrap gap-1.5 mt-1.5"><span class="sticker !text-[10px] !py-0.5" style="background:${s.color[0]}22">${s.icon} ${s.name}</span><span class="sticker !text-[10px] !py-0.5 ${g.priority==="High"?"grad-pink text-white":g.priority==="Medium"?"grad-sun":"grad-lime"}">${g.priority}</span><span class="text-[11px] font-bold opacity-60">📅 ${g.date||"—"}</span></div></div>
+      <button class="font-black opacity-40 hover:opacity-100 goal-del">✕</button>`;
+    row.querySelector(".goal-tog").addEventListener("click",()=>{
+      g.done=!g.done; AppStorage.save(K.goals,State.goals);
+      if(g.done){ addXP(APP_CONFIG.xpRewards.goalComplete,"for goal '"+g.title.slice(0,20)+"'"); toast(`✅ Goal crushed! <b>+15 XP</b>`); }
+      renderGoals(); updateDashboard();
+    });
+    row.querySelector(".goal-del").addEventListener("click",()=>{ State.goals=State.goals.filter(x=>x.id!==g.id); AppStorage.save(K.goals,State.goals); renderGoals(); updateDashboard(); toast("Goal deleted"); });
+    list.appendChild(row);
+  });
+  // dash preview
+  const dg=$("#dashGoals"); dg.innerHTML="";
+  State.goals.filter(g=>!g.done).slice(0,3).forEach(g=>dg.appendChild(createEl("div",{class:"flex gap-2 items-center text-sm font-bold rounded-xl border-2 border-[#141126] p-2 bg-white",html:`<span class="w-2.5 h-2.5 rounded-full" style="background:${subjById(g.subject).color[0]}"></span><span class="truncate">${esc(g.title)}</span>`})));
+  if(!State.goals.filter(g=>!g.done).length) dg.innerHTML=`<p class="text-sm font-bold opacity-50">All clear! Add a new mission 🎯</p>`;
+}
+function initGoals(){
+  renderGoals();
+  $("#goalAdd").addEventListener("click",()=>{
+    const t=$("#goalTitle").value.trim();
+    if(t.length<3){ $("#goalTitle").classList.add("shake"); setTimeout(()=>$("#goalTitle").classList.remove("shake"),450); return toast("⚠️ Write a goal first (min 3 letters)","#FFE9A8"); }
+    State.goals.push({id:uid(),title:t,subject:$("#goalSubject").value,priority:$("#goalPriority").value,date:$("#goalDate").value||todayStr(),done:false,created:Date.now()});
+    AppStorage.save(K.goals,State.goals); $("#goalTitle").value=""; renderGoals(); updateDashboard();
+    toast("🎯 New mission added! Let's crush it."); appLog("goal added → "+t);
+  });
+  $$(".gf").forEach(b=>b.addEventListener("click",()=>{ $$(".gf").forEach(x=>x.classList.remove("active")); b.classList.add("active"); goalFilter=b.dataset.f; renderGoals(); }));
+  appLog("initGoals → missions wired");
+}
+
+// ---- initNotes ----
+let editingNote=null;
+function renderNotes(){
+  const q=($("#noteSearch").value||"").toLowerCase(), f=$("#noteFilter").value||"all";
+  const gq=($("#globalSearch").value||"").toLowerCase();
+  const grid=$("#notesGrid"); grid.innerHTML="";
+  const sel=$("#noteFilter"); if(sel.options.length<=1){ APP_CONFIG.subjects.forEach(s=>sel.appendChild(createEl("option",{text:s.name,attrs:{value:s.id}}))); }
+  const nsel=$("#nSubject"); if(!nsel.options.length){ APP_CONFIG.subjects.forEach(s=>nsel.appendChild(createEl("option",{text:s.name,attrs:{value:s.id}}))); }
+  let arr=[...State.notes].sort((a,b)=>(b.pinned-a.pinned)||(b.created-a.created));
+  arr=arr.filter(n=>(f==="all"||n.subject===f)&&(!q||(n.title+n.body).toLowerCase().includes(q))&&(!gq||$("#view-notes").classList.contains("active")?true:true));
+  const words=State.notes.reduce((a,n)=>a+n.body.split(/\s+/).filter(Boolean).length,0);
+  $("#noteCount").textContent=State.notes.length; $("#noteWords").textContent=words;
+  if(!arr.length){ grid.innerHTML=`<div class="brutal p-10 text-center"><p class="font-display font-bold text-2xl">No notes yet 📝</p><p class="text-sm font-bold opacity-60">Hit “+ New Note” and save your first formula.</p></div>`; return; }
+  arr.forEach(n=>{
+    const s=subjById(n.subject);
+    const c=createEl("div",{class:"brutal note-card p-4 mb-4 brutal-hover",style:{background:n.color}});
+    c.innerHTML=`
+      <div class="flex items-center gap-2 mb-2"><span class="sticker bg-white !text-[10px]">${s.icon} ${s.name}</span>${n.pinned?'<span class="sticker grad-pink text-white !text-[10px]">📌 PINNED</span>':""}<span class="ml-auto text-[11px] font-bold opacity-50">${new Date(n.created).toLocaleDateString()}</span></div>
+      <h4 class="font-display font-bold text-lg leading-tight">${esc(n.title)}</h4>
+      <p class="text-sm font-semibold opacity-80 mt-1 whitespace-pre-wrap">${esc(n.body.slice(0,220))}${n.body.length>220?"…":""}</p>
+      <div class="flex gap-2 mt-3"><button class="btn-brutal text-[11px] px-3 py-1.5 bg-white n-edit">Edit</button><button class="btn-brutal text-[11px] px-3 py-1.5 bg-white n-pin">${n.pinned?"Unpin":"Pin"}</button><button class="btn-brutal text-[11px] px-3 py-1.5 grad-pink n-del">Delete</button></div>`;
+    c.querySelector(".n-edit").addEventListener("click",()=>openNoteModal(n.id));
+    c.querySelector(".n-pin").addEventListener("click",()=>{ n.pinned=!n.pinned; AppStorage.save(K.notes,State.notes); renderNotes(); });
+    c.querySelector(".n-del").addEventListener("click",()=>{ State.notes=State.notes.filter(x=>x.id!==n.id); AppStorage.save(K.notes,State.notes); renderNotes(); updateDashboard(); toast("Note deleted"); });
+    grid.appendChild(c);
+  });
+}
+function openNoteModal(id=null,presetSub=null){
+  editingNote=id;
+  $("#noteModalTitle").textContent=id?"Edit Note":"New Note";
+  if(id){ const n=State.notes.find(x=>x.id===id); $("#nTitle").value=n.title; $("#nBody").value=n.body; $("#nSubject").value=n.subject; $("#nColor").value=n.color; }
+  else{ $("#nTitle").value=""; $("#nBody").value=""; if(presetSub) $("#nSubject").value=presetSub; }
+  $("#nWords").textContent=$("#nBody").value.split(/\s+/).filter(Boolean).length;
+  $("#noteModal").classList.add("open");
+}
+function initNotes(){
+  renderNotes();
+  $("#noteAddBtn").addEventListener("click",()=>openNoteModal());
+  $("#noteClose").addEventListener("click",()=>$("#noteModal").classList.remove("open"));
+  $("#noteModal").addEventListener("click",e=>{ if(e.target.id==="noteModal") e.target.classList.remove("open"); });
+  $("#nBody").addEventListener("input",e=>$("#nWords").textContent=e.target.value.split(/\s+/).filter(Boolean).length);
+  $("#noteSearch").addEventListener("input",renderNotes);
+  $("#noteFilter").addEventListener("change",renderNotes);
+  $("#nSave").addEventListener("click",()=>{
+    const t=$("#nTitle").value.trim(), b=$("#nBody").value.trim();
+    if(t.length<2||b.length<2){ toast("⚠️ Give your note a title + body","#FFE9A8"); return; }
+    if(editingNote){ const n=State.notes.find(x=>x.id===editingNote); Object.assign(n,{title:t,body:b,subject:$("#nSubject").value,color:$("#nColor").value}); toast("✏️ Note updated!"); }
+    else{ State.notes.push({id:uid(),title:t,body:b,subject:$("#nSubject").value,color:$("#nColor").value,pinned:false,created:Date.now()}); addXP(APP_CONFIG.xpRewards.noteCreate,"for a new note"); toast("💾 Note saved! <b>+5 XP</b>"); }
+    AppStorage.save(K.notes,State.notes); $("#noteModal").classList.remove("open"); renderNotes(); updateDashboard(); checkAchievements();
+  });
+  appLog("initNotes → editor + masonry ready");
+}
+
+// ---- initAchievements ----
+function renderAchievements(){
+  const g=$("#achGrid"); g.innerHTML="";
+  $("#achTotal").textContent=ACHIEVEMENTS.length; $("#achUnlocked").textContent=State.achievements.length; $("#achXP").textContent=State.xp;
+  $("#achBar").style.width=(State.achievements.length/ACHIEVEMENTS.length*100)+"%";
+  ACHIEVEMENTS.forEach(a=>{
+    const un=State.achievements.includes(a.id);
+    const c=createEl("div",{class:"brutal brutal-hover p-5 text-center relative overflow-hidden"+(un?"":" opacity-90")});
+    c.innerHTML=`${un?'<span class="sticker grad-lime absolute top-3 right-3 !text-[10px]">UNLOCKED ✓</span>':'<span class="sticker bg-white absolute top-3 right-3 !text-[10px]">🔒 LOCKED</span>'}
+      <div class="w-20 h-20 mx-auto rounded-3xl grid place-items-center text-4xl border-[3px] border-[#141126] mt-4 ${un?"":"grayscale"}" style="background:${un?"linear-gradient(135deg,#FFC700,#FF6B35)":"#e9e6f5"}">${un?a.icon:"🔒"}</div>
+      <h4 class="font-display font-bold text-lg mt-3">${a.name}</h4><p class="text-sm font-semibold opacity-60">${a.desc}</p>
+      ${un?"":`<div class="prog-track mt-3"><div class="prog-fill" style="width:35%"></div></div><p class="text-[11px] font-black mt-1 opacity-50">KEEP GRINDING…</p>`}`;
+    if(un){ c.style.background="linear-gradient(180deg,var(--card),#FFF6C9)"; }
+    g.appendChild(c);
+  });
+  const last=[...State.achievements].pop();
+  if(last){ const a=ACHIEVEMENTS.find(x=>x.id===last); $("#dashAch").innerHTML=`${a.icon} <b>${a.name}</b> — ${a.desc} <span class="sticker grad-lime !text-[10px] ml-1">+25 XP</span>`; }
+}
+function initAchievements(){ renderAchievements(); $("#bellBtn").addEventListener("click",()=>{ $("#bellDot").style.display="none"; const locked=ACHIEVEMENTS.length-State.achievements.length; toast(`🔔 <b>${State.achievements.length} wins</b> unlocked • ${locked} to go. Keep studying, ${APP_CONFIG.student.name}!`,"#8BE9FD"); boom(); }); appLog("initAchievements → "+ACHIEVEMENTS.length+" badges"); }
+
+// ---- initContactForm ----
+function initContactForm(){
+  const paint=()=>$("#msgCount").textContent=State.messages.length;
+  paint();
+  $("#contactForm").addEventListener("submit",e=>{
+    e.preventDefault();
+    const n=$("#cName").value.trim(), em=$("#cEmail").value.trim(), m=$("#cMsg").value.trim();
+    const err=$("#cErr"); err.classList.add("hidden");
+    const fail=t=>{ err.textContent=t; err.classList.remove("hidden"); $("#contactForm").classList.add("shake"); setTimeout(()=>$("#contactForm").classList.remove("shake"),450); };
+    if(n.length<2) return fail("⚠️ Please tell me your name (min 2 letters).");
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return fail("⚠️ That email looks off — check @ and domain.");
+    if(m.length<10) return fail("⚠️ Message too short — write at least 10 characters.");
+    const btn=$("#cBtn"); btn.disabled=true; btn.textContent="Sending… ⏳";
+    setTimeout(()=>{
+      State.messages.push({name:n,email:em,topic:$("#cTopic").value,msg:m,ts:Date.now()});
+      AppStorage.save(K.msgs,State.messages); paint();
+      btn.disabled=false; btn.textContent="Send Message ✈";
+      e.target.reset(); boom(); addXP(5,"for reaching out");
+      toast(`💌 Thanks <b>${esc(n)}</b>! Message saved. I'll reply within 24h.`,"#C9F158");
+      appLog(`contact message from ${n} <${em}>`);
+    },1100);
+  });
+  // storage lab demo buttons
+  $("#saveDemoBtn").addEventListener("click",()=>{ AppStorage.save(K.demo,{hero:"Rushabh",at:new Date().toLocaleString()}); toast("💾 Demo object saved to localStorage"); refreshKeys(); });
+  $("#retrieveDemoBtn").addEventListener("click",()=>{ const v=AppStorage.retrieve(K.demo,null); toast(v?`📦 Retrieved: <b>${esc(JSON.stringify(v))}</b>`:"📦 No demo key yet — hit Save first","#8BE9FD"); });
+  $("#removeDemoBtn").addEventListener("click",()=>{ AppStorage.remove(K.demo); toast("🗑 Demo key removed"); refreshKeys(); });
+  const wipe=()=>{ if(confirm("Clear ALL Study Hub data? XP, goals, notes — everything resets.")){ AppStorage.clear(); location.reload(); } };
+  $("#resetBtn").addEventListener("click",wipe); $("#clearAllBtn2").addEventListener("click",wipe);
+  $("#exportBtn").addEventListener("click",()=>{
+    const dump={}; Object.values(K).forEach(k=>dump[k]=AppStorage.retrieve(k,null));
+    const blob=new Blob([JSON.stringify({app:APP_CONFIG.appName,version:APP_CONFIG.version,exported:new Date().toISOString(),data:dump},null,2)],{type:"application/json"});
+    const a=createEl("a",{attrs:{href:URL.createObjectURL(blob),download:"sschub-rushabh-backup.json"}}); a.click();
+    toast("⤓ Backup exported as JSON!"); appLog("data exported");
+  });
+  refreshKeys();
+  appLog("initContactForm → validation + storage lab ready");
+}
+function refreshKeys(){
+  const w=$("#storageKeys"); if(!w) return; w.innerHTML="";
+  Object.entries(K).forEach(([label,key])=>{
+    const has=localStorage.getItem(key)!==null;
+    w.appendChild(createEl("div",{class:"flex items-center gap-2 rounded-lg border-2 border-[#141126] px-2 py-1 bg-white",html:`<span class="w-2.5 h-2.5 rounded-full" style="background:${has?"#22C55E":"#ccc"}"></span><span class="truncate">${key}</span><span class="ml-auto opacity-50">${has?(localStorage.getItem(key).length/1024).toFixed(1)+"kb":"empty"}</span>`}));
+  });
+  $("#configPreview").textContent=JSON.stringify({app:APP_CONFIG.appName,version:APP_CONFIG.version,student:APP_CONFIG.student.name,subjects:APP_CONFIG.subjects.map(s=>s.name)},null,2);
+}
+
+// ---- initScrollAnimations ----
+let revealObs=null;
+function observeReveals(){
+  if(!revealObs){
+    revealObs=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add("revealed"); revealObs.unobserve(e.target);} }),{threshold:.12});
+  }
+  $$(".reveal:not(.revealed)").forEach(el=>revealObs.observe(el));
+}
+function initScrollAnimations(){ observeReveals(); appLog("initScrollAnimations → IntersectionObserver live"); }
+
+// ---- updateDashboard: refresh every stat ----
+function updateDashboard(){
+  const lvl=levelOf(State.xp), inLvl=State.xp%300, pct=Math.round(inLvl/300*100);
+  ["statXP","heroXP","sideXPText","footXP"].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=id==="footXP"?State.xp+" XP":id==="sideXPText"?State.xp+" XP":State.xp; });
+  $("#sideLevel").textContent=lvl; $("#cardLevel").textContent="Lv "+lvl;
+  $("#statLevel").textContent=`Level ${lvl} ${lvl<3?"Scholar":lvl<6?"Achiever":"Legend"}`;
+  $("#sideXPBar").style.width=pct+"%"; $("#statXPBar").style.width=pct+"%"; $("#sideXPNext").textContent=(300-inLvl)+" to next";
+  const mins=State.sessions.reduce((a,s)=>a+s.mins,0);
+  $("#statHours").textContent=Math.floor(mins/60); $("#statMins").textContent=(mins%60)+"m";
+  $("#heroHours").textContent=(mins/60).toFixed(1); $("#statSessions").textContent=State.sessions.length;
+  $("#statFocusBar").style.width=Math.min(100,mins/600*100)+"%";
+  const qn=State.quizHistory.length, avg=qn?Math.round(State.quizHistory.reduce((a,h)=>a+h.pct,0)/qn):0;
+  $("#statQuizAvg").textContent=avg; $("#heroQuiz").textContent=avg; $("#statQuizCount").textContent=qn; $("#statQuizBar").style.width=avg+"%";
+  const gd=State.goals.filter(g=>g.done).length;
+  $("#statGoals").textContent=`${gd}/${State.goals.length}`; $("#statGoalBar").style.width=(State.goals.length?gd/State.goals.length*100:0)+"%";
+  const syl=Math.round(Object.values(State.progress).reduce((a,b)=>a+b,0)/8);
+  $("#statSyllabus").textContent=syl+"% syllabus complete";
+  $("#streakPill").textContent=State.streak.count; $("#cardStreak").textContent=State.streak.count+" 🔥";
+  // progress bars on dash
+  const dp=$("#dashProgressBars"); dp.innerHTML="";
+  APP_CONFIG.subjects.slice(0,5).forEach(s=>{ const p=State.progress[s.id]??0;
+    dp.appendChild(createEl("div",{html:`<div class="flex justify-between text-xs font-black"><span>${s.icon} ${s.name}</span><span>${p}%</span></div><div class="prog-track"><div class="prog-fill" style="width:${p}%;background:linear-gradient(90deg,${s.color[0]},${s.color[1]})"></div></div>`})); });
+  dp.appendChild(createEl("p",{class:"text-xs font-bold opacity-50",text:"+ "+(APP_CONFIG.subjects.length-5)+" more in Subjects tab →"}));
+  // dash subjects preview
+  const ds=$("#dashSubjects"); ds.innerHTML="";
+  [...APP_CONFIG.subjects].sort((a,b)=>(State.progress[b.id]||0)-(State.progress[a.id]||0)).slice(0,3).forEach(s=>{
+    ds.appendChild(createEl("div",{class:"flex items-center gap-3 rounded-2xl border-[3px] border-[#141126] p-2.5 bg-white",html:`<span class="w-10 h-10 grid place-items-center rounded-xl text-white font-black" style="background:linear-gradient(135deg,${s.color[0]},${s.color[1]})">${s.icon}</span><div class="min-w-0"><p class="font-bold text-sm leading-none">${s.name}</p><p class="text-[11px] font-bold opacity-60">${State.progress[s.id]}% done</p></div><button class="ml-auto btn-brutal text-[11px] px-3 py-1.5 dash-q" data-id="${s.id}">Quiz →</button>`}));
+  });
+  $$(".dash-q").forEach(b=>b.addEventListener("click",()=>{ presetQuizSubject(b.dataset.id); switchView("quiz"); }));
+  refreshKeys();
+  appLog(`dashboard updated → XP:${State.xp} Lv:${lvl} | sessions:${State.sessions.length} | quizAvg:${avg}% | goals:${gd}/${State.goals.length}`);
+}
+
+// ---- extras: clock / greeting / marquee / quotes ----
+function initExtras(){
+  const tick=()=>{ const d=new Date(); $("#clock").textContent=d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}); const h=d.getHours(); $("#greetSticker").textContent=(h<12?"Good morning":h<17?"Good afternoon":"Good evening")+", Champ!"; };
+  tick(); setInterval(tick,15000);
+  const items=["MATHS 1 ∑","MATHS 2 △","SCIENCE 1 ⚛","SCIENCE 2 ❀","ENGLISH Aa","MARATHI अ","HINDI अः","SOCIAL SCIENCE ◍","RUSHABH ★","SSC 2026 ✦"];
+  $("#marqueeTrack").innerHTML=(items.concat(items)).map(t=>`<span class="px-5">✦ ${t}</span>`).join("");
+  $("#quoteBtn").addEventListener("click",()=>{ $("#quoteText").textContent='"'+APP_CONFIG.quotes[Math.floor(Math.random()*APP_CONFIG.quotes.length)]+'"'; });
+  // streak rollover
+  if(State.streak.lastDate!==todayStr()){ const y=new Date(Date.now()-864e5).toISOString().slice(0,10); if(State.streak.lastDate!==y) State.streak.count=1; State.streak.lastDate=todayStr(); AppStorage.save(K.streak,State.streak); }
+}
+
+// ================= MASTER INIT =================
+function initApp(){
+  console.log(`%c⚡ ${APP_CONFIG.appName} %c v${APP_CONFIG.version} %c by ${APP_CONFIG.student.name} `,"background:#FF2E93;color:#fff;font-weight:bold;padding:4px 8px;border-radius:8px","background:#FFC700;color:#141126;font-weight:bold;padding:4px 8px;border-radius:8px","background:#7C3AED;color:#fff;font-weight:bold;padding:4px 8px;border-radius:8px");
+  console.log(`[SSC Study Hub] Starting initialization… build ${APP_CONFIG.build}`);
+  initLoading();
+  initNavigation();
+  initTheme();
+  initSubjectSearch();
+  renderSubjects();
+  initTimer();
+  initQuiz();
+  initProgress();
+  initMarksCalculator();
+  initGoals();
+  initNotes();
+  initAchievements();
+  initContactForm();
+  initScrollAnimations();
+  initExtras();
+  updateDashboard();
+  checkAchievements();
+  console.log(`[SSC Study Hub] ✅ v${APP_CONFIG.version} fully initialized — ${APP_CONFIG.subjects.length} subjects, ${Object.values(QUIZ_BANK).flat().length} quiz questions, all systems go!`);
+  appLog(`App v${APP_CONFIG.version} initialized for ${APP_CONFIG.student.name} 🎓`);
+}
+document.addEventListener("DOMContentLoaded", initApp);
+</script>
+</body>
+</html>
